@@ -8,5 +8,10 @@ let g:instant_markdown_autostart = 0
 "let g:instant_markdown_mermaid = 1
 let g:instant_markdown_logfile = '/tmp/instant_markdown.log'
 "let g:instant_markdown_autoscroll = 0
-let g:instant_markdown_port = 9999
+let g:instant_markdown_port = 10010 
 "let g:instant_markdown_python = 1
+autocmd BufNewFile,BufRead *.md noremap <F12> :InstantMarkdownPreview<Enter>
+autocmd BufNewFile,BufRead *.md noremap <S-F12> :InstantMarkdownStop<Enter>
+autocmd BufNewFile,BufRead *.md inoremap <F12> <ESC>:InstantMarkdownPreview<Enter>
+autocmd BufNewFile,BufRead *.md inoremap <S-F12> <ESC>:InstantMarkdownStop<Enter>
+
