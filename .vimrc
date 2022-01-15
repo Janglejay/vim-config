@@ -1,90 +1,118 @@
-let mapleader = "\<space>"
-" set encoding=utf-8
-" set termencoding=utf-8
-" set fileencodings=ucs-bom,utf-8,cp936,gb18030,big5,euc-jp,euc-kr
-" set fileencoding=utf-8
-"
-" fomatter
-" unicode
-" autocmd BufNewFile,BufRead *.json map <Leader>l :%!python -m json.tool<CR>
+let mapleader="\<SPACE>"
 
 
-" autocmd
-"autocmd CursorMoved * setlocal hlsearch
-"autocmd CursorMovedI * setlocal nohlsearch
+" ----------
+" Register @ 
+" ----------
+let @c="\<Insert>\" ----------\<ESC>yypO"
 
-nmap <Leader>i ysiw
-nmap <Leader>I yss
-nmap <Leader>a ysaw
-nmap <Leader>d ds
-"noremap <ESC> <ESC>:setlocal nohlsearch<CR>
-"noremap / :setlocal hlsearch<CR>/
+
+" --------------
+" Copy and paste
+" --------------
+" set clipboard=unnamed
+noremap p "0p
+noremap P "0P
+noremap <Leader>p "*p
+noremap <Leader>P "*P
+
+nnoremap yy "0yy
+nnoremap <Leader>yy "*yy
+vnoremap y "0y
+vnoremap <Leader>y "*y
+
+nnoremap <Leader>d "0d
+vnoremap <Leader>d "0d
+noremap <Leader>D "0D
+
+" ----------
+" Mouse 
+" ----------
+set mouse=a
+
+" ----------
+" Window
+" ----------
+set autowriteall
+set showtabline=2
+set splitbelow
+set splitright
+
 map <C-w> <C-w><C-w>
 inoremap <C-w> <ESC><C-w><C-w>
-" nnoremap <Leader>c cs
-vmap s S
 
-" search
-" hls nohls
+" ----------
+" Search
+" ----------
 set hlsearch
 " is nois
 set incsearch
+set smartcase
+set ignorecase
 
-" window
-set showtabline=2
-set splitbelow
+nmap <silent> <Leader>n :nohlsearch<CR>
 
-" mark
+
+" ----------
+" Mark
+" ----------
 map m `
 noremap M m
 
-
-" move 
+" ----------
+" Move
+" ----------
 map L <End>
 map H <Home>
 
-" keymap
+" ----------
+" Undo
+" ----------
 nmap U :redo<Enter>
 nnoremap <Enter> o<Esc>
 
-" map <Space> <Insert><Space><Esc>
-set scrolloff=5
+" ----------
+" Show
+" ----------
 set cursorline
 set number
 set noshowmode
 set relativenumber
+set scrolloff=5
 " set nowrap
 
-"indent
+" ----------
+" Indent
+" ----------
+"To change the number of space characters inserted for indentation"
+set shiftwidth=4
+"insert 4 spaces for a tab"
+set softtabstop=4
+set expandtab
+" set tabstop=4
+" set autoindent
+" set smartindent
+
 nmap <Tab> >>
 nmap <S-Tab> <<
 vmap <Tab> >
 vmap <S-Tab> < 
-"To change the number of space characters inserted for indentation"
-set shiftwidth=4
-"insert 4 spaces for a tab"
-set tabstop=4
-set autoindent
-set smartindent
 
-set ignorecase
-
-" color
-" syntax on
+" ----------
+" Filetype
+" ----------
 filetype on
-" filetype indent on
 filetype plugin on
 
+" ----------
 " plugins
+" ----------
 call plug#begin("~/.vim/plugged")
 Plug 'scrooloose/syntastic'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'preservim/nerdtree'
-" Plug 'plasticboy/vim-markdown'
 Plug 'instant-markdown/vim-instant-markdown', {'for': 'markdown', 'do': 'yarn install'}
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
-" Plug 'iamcco/mathjax-support-for-mkdp'
-" Plug 'iamcco/markdown-preview.vim'
 call plug#end()
