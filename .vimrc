@@ -2,28 +2,29 @@
 "
 " autocmd BufWrite * :echom "Writing buffer!"
 let mapleader=","
-
+" ESC delay
+set ttimeoutlen=0
+" set timeoutlen=4000
 " ----------
 " origin keymap
 " ----------
-noremap U :redo<CR>
-nnoremap <CR> o<Esc>
-noremap vv <S-v> 
-inoremap jk <ESC>
-inoremap <ESC> <NOP>
-vnoremap U ~
-vnoremap ~ <NOP>
-vnoremap <ESC> <NOP>
-vnoremap u <ESC>
-cnoremap jk <ESC>
+ noremap U :redo<CR>
+ nnoremap <CR> o<Esc>
+ noremap vv <S-v> 
+ inoremap jk <ESC>
+" inoremap <ESC> <NOP>
+ vnoremap U ~
+ vnoremap ~ <NOP>
+" vnoremap <ESC> <NOP>
+ vnoremap u <ESC>
+ cnoremap jk <ESC>
+" 这一段加上会使得命令模式中的上下键成为字符
 " cnoremap <ESC> <NOP>
-noremap J <C-d>
-noremap K <C-u>
-" ----------
+ noremap J <C-d>
+ noremap K <C-u>
 " Register @ 
 " ----------
 let @c="\<Insert>\" ----------\<ESC>yypO"
-
 
 " ----------
 " Edit markdown
@@ -50,6 +51,17 @@ augroup markdown_edit_group
     autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>l d<Insert>[<++>]()<ESC>hp
     autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>m d<Insert>![<++>]()<ESC>hp
 augroup END
+
+" ----------
+" Compile lua
+" ----------
+augroup markdown_edit_group
+    autocmd!
+    autocmd BufNewFile,BufRead *.lua nnoremap <silent><buffer> <Leader>r :!/opt/homebrew/bin/lua %:p<CR>
+    autocmd BufNewFile,BufRead *.lua vnoremap <silent><buffer> <Leader>r <ESC>:!/opt/homebrew/bin/lua %:p<CR>
+augroup END
+
+
 " ----------
 " Edit .vimrc
 " ----------
@@ -171,4 +183,5 @@ Plug 'preservim/nerdtree'
 Plug 'instant-markdown/vim-instant-markdown', {'for': 'markdown', 'do': 'yarn install'}
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
+Plug 'flazz/vim-colorschemes'
 call plug#end()
