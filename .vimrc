@@ -1,4 +1,6 @@
 " let mapleader="\<SPACE>"
+"
+" autocmd BufWrite * :echom "Writing buffer!"
 let mapleader=","
 
 " ----------
@@ -26,26 +28,28 @@ let @c="\<Insert>\" ----------\<ESC>yypO"
 " ----------
 " Edit markdown
 " ----------
-autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>f /<++><CR>:nohl<CR>4"-cl
-autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>` <Insert>```<CR><++><CR>```<ESC>
-autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>b <Insert>**<++>**<ESC>
-autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>~ <Insert>~~<++>~~<ESC>
-autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>l <Insert>[<++>](<++>)<ESC>
-autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>m <Insert>![<++>](<++>)<ESC>
-                                                 
-autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>f <ESC>/<++><CR>:nohl<CR>4"-cl
-autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>` ```<CR><++><CR>```
-autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>b **<++>**
-autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>~ ~~<++>~~
-autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>l [<++>](<++>)
-autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>m ![<++>](<++>)
+augroup markdown_edit_group
+    autocmd!
+    autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>f /<++><CR>:nohl<CR>4"-cl
+    autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>` <Insert>```<CR><++><CR>```<ESC>
+    autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>b <Insert>**<++>**<ESC>
+    autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>~ <Insert>~~<++>~~<ESC>
+    autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>l <Insert>[<++>](<++>)<ESC>
+    autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>m <Insert>![<++>](<++>)<ESC>
+                                                     
+    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>f <ESC>/<++><CR>:nohl<CR>4"-cl
+    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>` ```<CR><++><CR>```
+    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>b **<++>**
+    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>~ ~~<++>~~
+    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>l [<++>](<++>)
+    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>m ![<++>](<++>)
 
-autocmd BufNewFile,BufRead *.md vmap <silent><buffer> <Leader>` <Leader>d<Insert>```<CR>```<CR><ESC>kO<ESC><Leader>p<ESC>
-autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>~ d<Insert>~~~~<ESC>2hp
-autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>b d<Insert>****<ESC>2hp
-autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>l d<Insert>[<++>]()<ESC>hp
-autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>m d<Insert>![<++>]()<ESC>hp
-
+    autocmd BufNewFile,BufRead *.md vmap <silent><buffer> <Leader>` <Leader>d<Insert>```<CR>```<CR><ESC>kO<ESC><Leader>p<ESC>
+    autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>~ d<Insert>~~~~<ESC>2hp
+    autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>b d<Insert>****<ESC>2hp
+    autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>l d<Insert>[<++>]()<ESC>hp
+    autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>m d<Insert>![<++>]()<ESC>hp
+augroup END
 " ----------
 " Edit .vimrc
 " ----------
@@ -81,7 +85,7 @@ noremap <Leader>y "1y
 " ----------
 " Mouse 
 " ----------
-set mouse=a
+set mouse=
 
 " ----------
 " Window
@@ -119,9 +123,9 @@ noremap M m
 " ----------
 " Move
 " ----------
-map L <End>
-map H <Home>
-
+noremap L <End>
+" map H <Home>
+noremap H <Home> 
 
 " ----------
 " Show

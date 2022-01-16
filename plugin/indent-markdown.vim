@@ -11,8 +11,10 @@ let g:instant_markdown_logfile = '/tmp/instant_markdown.log'
 let g:instant_markdown_port = 10010 
 " let g:instant_markdown_python = 1
 
-autocmd BufNewFile,BufRead *.md noremap <silent> <F12> :InstantMarkdownPreview<CR>
-autocmd BufNewFile,BufRead *.md noremap <silent> <S-F12> :InstantMarkdownStop<CR>
-autocmd BufNewFile,BufRead *.md inoremap <silent> <F12> <ESC>:InstantMarkdownPreview<CR>
-autocmd BufNewFile,BufRead *.md inoremap <silent> <S-F12> <ESC>:InstantMarkdownStop<CR>
 
+augroup indent_markdown_group
+    autocmd BufNewFile,BufRead *.md noremap <silent> <F12> :InstantMarkdownPreview<CR>
+    autocmd BufNewFile,BufRead *.md noremap <silent> <S-F12> :InstantMarkdownStop<CR>
+    autocmd BufNewFile,BufRead *.md inoremap <silent> <F12> <ESC>:InstantMarkdownPreview<CR>
+    autocmd BufNewFile,BufRead *.md inoremap <silent> <S-F12> <ESC>:InstantMarkdownStop<CR>
+augroup END
