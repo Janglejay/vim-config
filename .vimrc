@@ -22,9 +22,51 @@ set ttimeoutlen=0
 " cnoremap <ESC> <NOP>
  noremap J <C-d>
  noremap K <C-u>
+" noremap T <Insert><Tab>
+
+" ----------
 " Register @ 
 " ----------
-let @c="\<Insert>\" ----------\<ESC>yypO"
+augroup vim_reg_group
+    autocmd!
+    autocmd BufNewFile,BufRead *.vim,*.vimrc let @c="\<Insert>\" ----------\<ESC>\"0yy\"0pO"
+augroup END
+
+" ----------
+" 
+" ----------
+
+
+
+" ----------
+" Edit
+" ----------
+
+" ----------
+" Edit .vimrc
+" ----------
+noremap <silent> <Leader>ev :split $MYVIMRC<CR>
+noremap <silent> <Leader>sv :source $MYVIMRC<CR>
+
+" ----------
+" Edit Json
+" ----------
+ command! JsonFormat :execute '%!python2 -m json.tool'
+ \ | :execute '%!python2 -c "import re,sys;sys.stdout.write(re.sub(r\"\\\u[0-9a-f]{4}\", lambda m:m.group().decode(\"unicode_escape\").encode(\"utf-8\"), sys.stdin.read()))"'
+augroup json_edit_group
+    autocmd!
+    autocmd BufNewFile,BufRead *.json nmap <silent><buffer> == :JsonFormat<CR>
+"    autocmd BufNewFile,BufRead *.json nmap <silent><buffer> == :execute '%!python2 -m json.tool' | :execute '%!python2 -c "import re,sys;sys.stdout.write(re.sub(r\"\\\u[0-9a-f]{4}\", lambda m:m.group().decode(\"unicode_escape\").encode(\"utf-8\"), sys.stdin.read()))"'
+augroup END
+
+" ----------
+" Edit Java
+" ----------
+augroup java_edit_group
+    autocmd!
+    autocmd BufNewFile,BufRead *.java noremap <silent><buffer> ; $a;<ESC>
+    autocmd BufNewFile,BufRead *.java noremap <silent><buffer>{ $a {<CR>}<ESC>O
+augroup END
 
 " ----------
 " Edit markdown
@@ -53,21 +95,15 @@ augroup markdown_edit_group
 augroup END
 
 " ----------
-" Compile lua
+" Edit lua
 " ----------
-augroup markdown_edit_group
+augroup lua_edit_group
     autocmd!
     autocmd BufNewFile,BufRead *.lua nnoremap <silent><buffer> <Leader>r :!/opt/homebrew/bin/lua %:p<CR>
     autocmd BufNewFile,BufRead *.lua vnoremap <silent><buffer> <Leader>r <ESC>:!/opt/homebrew/bin/lua %:p<CR>
+    autocmd BufNewFile,BufRead *.lua noremap <silent><buffer> ; $a;<ESC>
+    autocmd BufNewFile,BufRead *.lua noremap <silent><buffer>{ $a {<CR>}<ESC>O
 augroup END
-
-
-" ----------
-" Edit .vimrc
-" ----------
-noremap <silent> <Leader>ev :split $MYVIMRC<CR>
-noremap <silent> <Leader>sv :source $MYVIMRC<CR>
-
 
 " --------------
 " Copy and paste
@@ -79,7 +115,9 @@ noremap x "-x
 noremap c "-c
 nnoremap cc "-cc
 nnoremap s "-s
-vnoremap p "1dp
+" vnoremap p "1dp
+" 防止每次都在后面粘贴，不符合习惯
+vnoremap p "1dP
 noremap <Leader>y "1y
 " noremap p "0p
 " noremap P "0P
@@ -138,6 +176,7 @@ noremap M m
 noremap L <End>
 " map H <Home>
 noremap H <Home> 
+noremap gf <C-]>
 
 " ----------
 " Show

@@ -8,8 +8,12 @@ source ~/.vim/plugin/vim-surround.vim
 " Do incremental searching.
 " set incsearch
 noremap p "*p
-vnoremap p "1d"*p
+vnoremap p "1d"*P
 set surround
+noremap ; $a;<ESC>
+noremap{ $a {<CR>
+noremap <Leader>f ^f<SPACE>lciw
+
 " Don't use Ex mode, use Q for formatting.
 " map Q gq
 "" -- Map IDE actions to IdeaVim" -- https://jb.gg/abva4t
