@@ -8,8 +8,9 @@ set ttimeoutlen=0
 " ----------
 " origin keymap
 " ----------
- noremap U :redo<CR>
- nnoremap <CR> o<Esc>
+ nnoremap U :redo<CR>
+"  nnoremap <CR> o<Esc>
+ noremap <CR> ;
  noremap vv <S-v> 
  inoremap jk <ESC>
 " inoremap <ESC> <NOP>
@@ -20,8 +21,12 @@ set ttimeoutlen=0
  cnoremap jk <ESC>
 " 这一段加上会使得命令模式中的上下键成为字符
 " cnoremap <ESC> <NOP>
- noremap J <C-d>
- noremap K <C-u>
+" 翻半页
+" noremap J <C-d>
+" noremap K <C-u>
+" 翻一段（空行为一段）
+noremap J }
+noremap K {
 " noremap T <Insert><Tab>
 
 " ----------
@@ -106,7 +111,7 @@ augroup lua_edit_group
 augroup END
 
 " --------------
-" Copy and paste
+" Copy and paste or replace
 " --------------
 set clipboard=unnamed
 noremap <Leader>d "1d
@@ -119,6 +124,7 @@ nnoremap s "-s
 " 防止每次都在后面粘贴，不符合习惯
 vnoremap p "1dP
 noremap <Leader>y "1y
+nnoremap <Leader>r viw"1dP
 " noremap p "0p
 " noremap P "0P
 " noremap <Leader>p "*p
@@ -175,7 +181,8 @@ noremap M m
 " ----------
 noremap L <End>
 " map H <Home>
-noremap H <Home> 
+" noremap H <Home> 
+noremap H ^
 noremap gf <C-]>
 
 " ----------

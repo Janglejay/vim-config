@@ -7,12 +7,17 @@ source ~/.vim/plugin/vim-surround.vim
 
 " Do incremental searching.
 " set incsearch
+set idearefactormode=keep
 noremap p "*p
 vnoremap p "1d"*P
+"noremap <Del
 set surround
+set easymotion
+
 noremap ; $a;<ESC>
 noremap{ $a {<CR>
-noremap <Leader>f ^f<SPACE>lciw
+" noremap <Leader>f ^f<SPACE>lciw;
+noremap <Leader>f ^f=2hciw
 
 " Don't use Ex mode, use Q for formatting.
 " map Q gq
@@ -26,5 +31,13 @@ noremap <Leader>f ^f<SPACE>lciw
 "" Map \b to toggle the breakpoint on the current line
 "map \b <Action>(ToggleLineBreakpoint)
 
-
 " Find more examples here: https://jb.gg/share-ideavimrc
+noremap bb :action ToggleLineBreakpoint<CR>
+noremap br :action Resume<CR>
+noremap bp :action Debugger.PopFrame<CR>
+noremap bv :action ViewBreakpoints<CR>
+noremap bf :action ForceRunToCursor<CR>
+noremap bi :action ForceStepInto<CR>
+noremap bn :action ForceStepOver<CR>
+noremap gl :action NextTab<CR>
+noremap gh :action PreviousTab<CR>
