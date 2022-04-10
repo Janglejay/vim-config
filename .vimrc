@@ -11,6 +11,8 @@ set ttimeoutlen=0
  nnoremap U :redo<CR>
 "  nnoremap <CR> o<Esc>
  noremap <CR> ;
+" use in GUI
+" noremap <S-CR> ,
  noremap vv <S-v> 
  inoremap jk <ESC>
 " inoremap <ESC> <NOP>
@@ -56,13 +58,20 @@ noremap <silent> <Leader>sv :source $MYVIMRC<CR>
 " ----------
 " Edit Json
 " ----------
- command! JsonFormat :execute '%!python2 -m json.tool'
- \ | :execute '%!python2 -c "import re,sys;sys.stdout.write(re.sub(r\"\\\u[0-9a-f]{4}\", lambda m:m.group().decode(\"unicode_escape\").encode(\"utf-8\"), sys.stdin.read()))"'
+command! JsonFormat :%!jq .
+
 augroup json_edit_group
     autocmd!
     autocmd BufNewFile,BufRead *.json nmap <silent><buffer> == :JsonFormat<CR>
-"    autocmd BufNewFile,BufRead *.json nmap <silent><buffer> == :execute '%!python2 -m json.tool' | :execute '%!python2 -c "import re,sys;sys.stdout.write(re.sub(r\"\\\u[0-9a-f]{4}\", lambda m:m.group().decode(\"unicode_escape\").encode(\"utf-8\"), sys.stdin.read()))"'
 augroup END
+
+" command! JsonFormat :execute '%!python2 -m json.tool'
+" \ | :execute '%!python2 -c "import re,sys;sys.stdout.write(re.sub(r\"\\\u[0-9a-f]{4}\", lambda m:m.group().decode(\"unicode_escape\").encode(\"utf-8\"), sys.stdin.read()))"'
+"augroup json_edit_group
+"    autocmd!
+"    autocmd BufNewFile,BufRead *.json nmap <silent><buffer> == :JsonFormat<CR>
+"    autocmd BufNewFile,BufRead *.json nmap <silent><buffer> == :execute '%!python2 -m json.tool' | :execute '%!python2 -c "import re,sys;sys.stdout.write(re.sub(r\"\\\u[0-9a-f]{4}\", lambda m:m.group().decode(\"unicode_escape\").encode(\"utf-8\"), sys.stdin.read()))"'
+"augroup END
 
 " ----------
 " Edit Java
@@ -173,8 +182,39 @@ noremap <silent> <Leader>n :nohlsearch<CR>
 " ----------
 " Mark
 " ----------
-noremap m `
-noremap M m
+" noremap m `
+" noremap M m
+" one page mark
+noremap mm mm
+noremap gm `m
+" other page mark
+noremap ma mA
+noremap mb mB
+noremap mc mC
+noremap md mD
+noremap ga `A
+noremap gb `B
+noremap gc `C
+noremap gd `D
+noremap m1 mE
+noremap m2 mF
+noremap m3 mG
+noremap m4 mH
+noremap g1 `E
+noremap g2 `F
+noremap g3 `G
+noremap g4 `H
+noremap m7 mI
+noremap m8 mJ
+noremap m9 mK
+noremap m0 mL
+noremap g7 `I
+noremap g8 `J
+noremap g9 `K
+noremap g0 `L
+
+" noremap go '^
+
 
 " ----------
 " Move
@@ -184,6 +224,7 @@ noremap L <End>
 " noremap H <Home> 
 noremap H ^
 noremap gf <C-]>
+noremap gn %
 
 " ----------
 " Show

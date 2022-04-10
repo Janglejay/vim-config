@@ -13,6 +13,7 @@ vnoremap p "1d"*P
 "noremap <Del
 set surround
 set easymotion
+noremap <S-CR> ,
 
 noremap ; $a;<ESC>
 noremap{ $a {<CR>
@@ -41,3 +42,8 @@ noremap bi :action ForceStepInto<CR>
 noremap bn :action ForceStepOver<CR>
 noremap gl :action NextTab<CR>
 noremap gh :action PreviousTab<CR>
+noremap gu :action FindUsages<CR>
+noremap tt :action ActivateTerminalToolWindow<CR>
+noremap R  :action RenameElement<CR>
+
+
