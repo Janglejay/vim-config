@@ -45,5 +45,12 @@ noremap gh :action PreviousTab<CR>
 noremap gu :action FindUsages<CR>
 noremap tt :action ActivateTerminalToolWindow<CR>
 noremap R  :action RenameElement<CR>
+noremap gw :action OpenProjectWindows<CR>
+
+noremap zR :action Run<CR>
+noremap zr :action RunClass<CR>
+
+noremap zD :action Debug<CR>
+noremap zd :action DebugClass<CR>
 
 

@@ -87,6 +87,7 @@ export PATH=$PATH:$MAVEN_HOME/bin
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-8.jdk/Contents/Home
 
 export S="/Users/fufangjie/Documents/Shell"
+export T="/Users/fufangjie/Documents/tmp"
 #export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-16.jdk/Contents/Home
 
 
@@ -114,8 +115,16 @@ export S="/Users/fufangjie/Documents/Shell"
 alias cc='cd /Users/fufangjie/Company/JavaProjects'
 alias cm='cd /Users/fufangjie/MyProjects'
 alias cdd='cd /Users/fufangjie/Documents'
+alias cj='cd /Users/fufangjie/Documents/tmp/json_buffer'
+alias cs='cd $S'
+alias ct='cd $T'
 
-alias ej='source /Users/fufangjie/Users/fufangjie/Documents/Shell/edit_json.sh'
+alias t='tmux'
+
+alias ej='source $S/edit_file.sh json'
+alias et='source $S/edit_file.sh txt'
+alias em='source $S/edit_file.sh md'
+
 alias vim='nvim'
 alias vi='nvim'
 
@@ -126,5 +135,28 @@ bindkey -v
 bindkey -M vicmd "H" vi-beginning-of-line
 bindkey -M vicmd "L" vi-end-of-line 
 bindkey -M vicmd "k" history-beginning-search-backward
+bindkey -M vicmd "j" history-beginning-search-forward 
+bindkey -M viins "jk" vi-cmd-mode
 
+# Change cursor shape for different vi modes.
+function zle-keymap-select {
+  if [[ ${KEYMAP} == vicmd ]] ||
+     [[ $1 = 'block' ]]; then
+    echo -ne '\e[1 q'
 
+  elif [[ ${KEYMAP} == main ]] ||
+       [[ ${KEYMAP} == viins ]] ||
+       [[ ${KEYMAP} = '' ]] ||
+       [[ $1 = 'beam' ]]; then
+    echo -ne '\e[5 q'
+  fi
+}
+zle -N zle-keymap-select
+
+# Use beam shape cursor on startup.
+# echo -ne '\e[5 q'
+
+# Use beam shape cursor for each new prompt.
+preexec() {
+   echo -ne '\e[5 q'
+}
