@@ -164,8 +164,12 @@ set splitright
 " set wildmode=list:longest:full
 " set wildchar=<Tab> wildcharm=<C-Z>
 
-map <C-w> <C-w><C-w>
-inoremap <C-w> <ESC><C-w><C-w>
+" map <C-w> <C-w><C-w>
+" inoremap <C-w> <ESC><C-w><C-w>
+noremap <Leader>h <C-w>h
+noremap <Leader>j <C-w>j
+noremap <Leader>k <C-w>k
+noremap <Leader>l <C-w>l
 
 " ----------
 " Search
@@ -263,12 +267,12 @@ filetype plugin on
 " plugins
 " ----------
 call plug#begin("~/.vim/plugged")
-Plug 'scrooloose/syntastic'
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
-Plug 'preservim/nerdtree'
-Plug 'instant-markdown/vim-instant-markdown', {'for': 'markdown', 'do': 'yarn install'}
-Plug 'tpope/vim-fugitive'
+" Plug 'scrooloose/syntastic'
+" Plug 'vim-airline/vim-airline'
+" Plug 'vim-airline/vim-airline-themes'
+" Plug 'preservim/nerdtree'
+" Plug 'instant-markdown/vim-instant-markdown', {'for': 'markdown', 'do': 'yarn install'}
+" Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
-Plug 'flazz/vim-colorschemes'
+" Plug 'flazz/vim-colorschemes'
 call plug#end()

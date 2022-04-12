@@ -42,10 +42,13 @@ noremap bi :action ForceStepInto<CR>
 noremap bn :action ForceStepOver<CR>
 noremap gl :action NextTab<CR>
 noremap gh :action PreviousTab<CR>
-noremap gu :action FindUsages<CR>
+noremap gr :action FindUsages<CR>
 noremap tt :action ActivateTerminalToolWindow<CR>
 noremap R  :action RenameElement<CR>
 noremap gw :action OpenProjectWindows<CR>
+noremap gi :action GotoImplementation<CR>
+" noremap gd :action GotoDeclaration<CR>
+noremap gu :action GotoSuperMethod<CR>
 
 noremap zR :action Run<CR>
 noremap zr :action RunClass<CR>

@@ -12,6 +12,7 @@ export ZSH="/Users/fufangjie/.oh-my-zsh"
 ZSH_THEME="robbyrussell"
 #ZSH_THEME="apple"
 #ZSH_THEME="avit"
+#ZSH_THEME="kafeitu"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -88,6 +89,7 @@ export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-8.jdk/Contents/Home
 
 export S="/Users/fufangjie/Documents/Shell"
 export T="/Users/fufangjie/Documents/tmp"
+export NEO_VIM="/Users/fufangjie/.config/nvim/"
 #export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-16.jdk/Contents/Home
 
 
@@ -116,6 +118,7 @@ alias cc='cd /Users/fufangjie/Company/JavaProjects'
 alias cm='cd /Users/fufangjie/MyProjects'
 alias cdd='cd /Users/fufangjie/Documents'
 alias cj='cd /Users/fufangjie/Documents/tmp/json_buffer'
+alias cn='cd $NEO_VIM'
 alias cs='cd $S'
 alias ct='cd $T'
 
