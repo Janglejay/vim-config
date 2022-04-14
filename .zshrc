@@ -127,9 +127,13 @@ alias t='tmux'
 alias ej='source $S/edit_file.sh json'
 alias et='source $S/edit_file.sh txt'
 alias em='source $S/edit_file.sh md'
+alias el='source $S/edit_file.sh lua'
+alias es='source $S/edit_file.sh sh'
 
 alias vim='nvim'
 alias vi='nvim'
+
+alias sd='source $S/format_date.sh'
 
 
 # open command vim mode edit

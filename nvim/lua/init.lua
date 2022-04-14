@@ -1,8 +1,21 @@
-require('basic')
-require('plugins-config/plugins')
--- require('plugins-config/compe-config')
-require('plugins-config/cmp-config')
-require('plugins-config/lsp-config')
-require('plugins-config/nvim-tree-config')
-require('plugins-config/bufferline-config')
-require('plugins-config/gitsigns-config')
+require "user.options"
+require "user.keymaps"
+require "user.plugins"
+require "user.colorscheme"
+require "user.cmp"
+require "user.lsp"
+require "user.telescope"
+require "user.treesitter"
+require "user.autopairs"
+require "user.comment"
+require "user.gitsigns"
+require "user.nvim-tree"
+require "user.bufferline"
+require "user.lualine"
+require "user.toggleterm"
+require "user.project"
+require "user.impatient"
+require "user.indentline"
+require "user.alpha"
+require "user.whichkey"
+require "user.autocommands"

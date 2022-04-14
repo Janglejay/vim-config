@@ -46,14 +46,21 @@ noremap gr :action FindUsages<CR>
 noremap tt :action ActivateTerminalToolWindow<CR>
 noremap R  :action RenameElement<CR>
 noremap gw :action OpenProjectWindows<CR>
-noremap gi :action GotoImplementation<CR>
+" noremap gi :action GotoImplementation<CR>
 " noremap gd :action GotoDeclaration<CR>
-noremap gu :action GotoSuperMethod<CR>
+" noremap gu :action GotoSuperMethod<CR>
 
 noremap zR :action Run<CR>
 noremap zr :action RunClass<CR>
-
 noremap zD :action Debug<CR>
 noremap zd :action DebugClass<CR>
 
+nnoremap gcc :action CommentByLineComment<CR>
+vnoremap gc :action CommentByLineComment<CR>
+noremap gC :action CommentByBlockComment<CR>
+" noremap gd :action Git.CompareWithBranch<CR>
 
+noremap <Leader>c :action CloseContent<CR>
+noremap <Leader>C :action CloseAllEditorsButActive<CR>
+noremap <Leader>e :action SelectIn<CR>
+noremap <Leader>w :action HideAllWindows<CR>

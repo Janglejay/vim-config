@@ -4,7 +4,7 @@
 let mapleader=","
 " ESC delay
 set ttimeoutlen=0
-" set timeoutlen=4000
+set timeoutlen=800
 " ----------
 " origin keymap
 " ----------
@@ -34,10 +34,10 @@ noremap K {
 " ----------
 " Register @ 
 " ----------
-augroup vim_reg_group
-    autocmd!
-    autocmd BufNewFile,BufRead *.vim,*.vimrc let @c="\<Insert>\" ----------\<ESC>\"0yy\"0pO"
-augroup END
+" augroup vim_reg_group
+"     autocmd!
+"     autocmd BufNewFile,BufRead *.vim,*.vimrc let @c="\<Insert>\" ----------\<ESC>\"0yy\"0pO"
+" augroup END
 
 " ----------
 " 
@@ -52,8 +52,8 @@ augroup END
 " ----------
 " Edit .vimrc
 " ----------
-noremap <silent> <Leader>ev :split $MYVIMRC<CR>
-noremap <silent> <Leader>sv :source $MYVIMRC<CR>
+" noremap <silent> <Leader>ev :split $MYVIMRC<CR>
+" noremap <silent> <Leader>sv :source $MYVIMRC<CR>
 
 " ----------
 " Edit Json
@@ -62,9 +62,8 @@ command! JsonFormat :%!jq .
 
 augroup json_edit_group
     autocmd!
-    autocmd BufNewFile,BufRead *.json nmap <silent><buffer> == :JsonFormat<CR>
+    autocmd BufNewFile,BufRead *.json nmap <silent><buffer> = :JsonFormat<CR>
 augroup END
-
 " command! JsonFormat :execute '%!python2 -m json.tool'
 " \ | :execute '%!python2 -c "import re,sys;sys.stdout.write(re.sub(r\"\\\u[0-9a-f]{4}\", lambda m:m.group().decode(\"unicode_escape\").encode(\"utf-8\"), sys.stdin.read()))"'
 "augroup json_edit_group
@@ -87,25 +86,28 @@ augroup END
 " ----------
 augroup markdown_edit_group
     autocmd!
-    autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>f /<++><CR>:nohl<CR>4"-cl
-    autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>` <Insert>```<CR><++><CR>```<ESC>
-    autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>b <Insert>**<++>**<ESC>
-    autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>~ <Insert>~~<++>~~<ESC>
-    autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>l <Insert>[<++>](<++>)<ESC>
-    autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>m <Insert>![<++>](<++>)<ESC>
+    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>f /<++><CR>:nohl<CR>4"-cl
+    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>` <Insert>```<CR><++><CR>```<ESC>
+    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>b <Insert>**<++>**<ESC>
+    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>s <Insert>~~<++>~~<ESC>
+    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>o <Insert>[<++>](<++>)<ESC>
+    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>p <Insert>![<++>](<++>)<ESC>
+    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>m <Insert>- [<++>]<ESC>
                                                      
     autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>f <ESC>/<++><CR>:nohl<CR>4"-cl
-    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>` ```<CR><++><CR>```
+    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>c ```<CR><++><CR>```
     autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>b **<++>**
-    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>~ ~~<++>~~
+    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>s ~~<++>~~
     autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>l [<++>](<++>)
-    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>m ![<++>](<++>)
+    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>p ![<++>](<++>)
+    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>m - [ ]
 
-    autocmd BufNewFile,BufRead *.md vmap <silent><buffer> <Leader>` <Leader>d<Insert>```<CR>```<CR><ESC>kO<ESC><Leader>p<ESC>
-    autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>~ d<Insert>~~~~<ESC>2hp
-    autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>b d<Insert>****<ESC>2hp
-    autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>l d<Insert>[<++>]()<ESC>hp
-    autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>m d<Insert>![<++>]()<ESC>hp
+    " autocmd BufNewFile,BufRead *.md vmap <silent><buffer> <Leader>c <Leader>d<Insert>```<CR>```<CR><ESC>kO<ESC><Leader>p<ESC>
+    " autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>s d<Insert>~~~~<ESC>2hp
+    " autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>b d<Insert>****<ESC>2hp
+    " autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>l d<Insert>[<++>]()<ESC>hp
+    " autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>p d<Insert>![<++>]()<ESC>hp
+
 augroup END
 
 " ----------
@@ -113,8 +115,10 @@ augroup END
 " ----------
 augroup lua_edit_group
     autocmd!
-    autocmd BufNewFile,BufRead *.lua nnoremap <silent><buffer> <Leader>r :!/opt/homebrew/bin/lua %:p<CR>
-    autocmd BufNewFile,BufRead *.lua vnoremap <silent><buffer> <Leader>r <ESC>:!/opt/homebrew/bin/lua %:p<CR>
+    " autocmd BufNewFile,BufRead *.lua nnoremap <silent><buffer> <Leader>r :!/opt/homebrew/bin/lua %:p<CR>
+    " autocmd BufNewFile,BufRead *.lua vnoremap <silent><buffer> <Leader>r <ESC>:!/opt/homebrew/bin/lua %:p<CR>
+    autocmd BufNewFile,BufRead *.lua nnoremap <silent><buffer> zr :!/opt/homebrew/bin/lua %:p<CR>
+    autocmd BufNewFile,BufRead *.lua vnoremap <silent><buffer> zr <ESC>:!/opt/homebrew/bin/lua %:p<CR>
     autocmd BufNewFile,BufRead *.lua noremap <silent><buffer> ; $a;<ESC>
     autocmd BufNewFile,BufRead *.lua noremap <silent><buffer>{ $a {<CR>}<ESC>O
 augroup END
@@ -192,30 +196,26 @@ noremap <silent> <Leader>n :nohlsearch<CR>
 noremap mm mm
 noremap gm `m
 " other page mark
-noremap ma mA
-noremap mb mB
-noremap mc mC
-noremap md mD
-noremap ga `A
-noremap gb `B
-noremap gc `C
-noremap gd `D
-noremap m1 mE
-noremap m2 mF
-noremap m3 mG
-noremap m4 mH
-noremap g1 `E
-noremap g2 `F
-noremap g3 `G
-noremap g4 `H
-noremap m7 mI
-noremap m8 mJ
-noremap m9 mK
-noremap m0 mL
-noremap g7 `I
-noremap g8 `J
-noremap g9 `K
-noremap g0 `L
+noremap m1 mA
+noremap m2 mB
+noremap m3 mC
+noremap m4 mD
+noremap g1 `A
+noremap g2 `B
+noremap g3 `C
+noremap g4 `D
+noremap m5 mE
+noremap m6 mF
+noremap m7 mG
+noremap m8 mH
+noremap g5 `E
+noremap g6 `F
+noremap g7 `G
+noremap g8 `H
+noremap m9 mI
+noremap m0 mJ
+noremap g9 `I
+noremap g0 `J
 
 " noremap go '^
 
@@ -236,7 +236,7 @@ noremap gn %
 set cursorline
 set number
 set noshowmode
-set relativenumber
+" set relativenumber
 set scrolloff=5
 " set nowrap
 
@@ -271,8 +271,9 @@ call plug#begin("~/.vim/plugged")
 " Plug 'vim-airline/vim-airline'
 " Plug 'vim-airline/vim-airline-themes'
 " Plug 'preservim/nerdtree'
-" Plug 'instant-markdown/vim-instant-markdown', {'for': 'markdown', 'do': 'yarn install'}
+Plug 'instant-markdown/vim-instant-markdown', {'for': 'markdown', 'do': 'yarn install'}
 " Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
+Plug 'dhruvasagar/vim-table-mode'
 " Plug 'flazz/vim-colorschemes'
 call plug#end()
