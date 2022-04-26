@@ -40,10 +40,11 @@ noremap bv :action ViewBreakpoints<CR>
 noremap bf :action ForceRunToCursor<CR>
 noremap bi :action ForceStepInto<CR>
 noremap bn :action ForceStepOver<CR>
+noremap be :action XDebugger.Evaluation.Dialog.Tree.Popup<CR>
+
 noremap gl :action NextTab<CR>
 noremap gh :action PreviousTab<CR>
 noremap gr :action FindUsages<CR>
-noremap tt :action ActivateTerminalToolWindow<CR>
 noremap R  :action RenameElement<CR>
 noremap gw :action OpenProjectWindows<CR>
 " noremap gi :action GotoImplementation<CR>
@@ -64,3 +65,13 @@ noremap <Leader>c :action CloseContent<CR>
 noremap <Leader>C :action CloseAllEditorsButActive<CR>
 noremap <Leader>e :action SelectIn<CR>
 noremap <Leader>w :action HideAllWindows<CR>
+
+noremap zz :action CollapseRegion<CR>
+noremap zZ :action CollapseAllRegions<CR>
+noremap <Leader>z :action ExpandRegion<CR>
+noremap <Leader>Z :action ExpandAllRegions<CR>
+noremap = :action ReformatCode<CR>
+
+noremap wt :action ActivateTerminalToolWindow<CR>
+noremap wd :action ActivateDebugToolWindow<CR>
+noremap wr :action ActivateRunToolWindow<CR>

@@ -238,7 +238,7 @@ set number
 set noshowmode
 " set relativenumber
 set scrolloff=5
-" set nowrap
+set nowrap
 
 " ----------
 " Indent

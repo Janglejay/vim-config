@@ -138,32 +138,32 @@ alias sd='source $S/format_date.sh'
 
 # open command vim mode edit
 # website: http://bolyai.cs.elte.hu/zsh-manual/zsh_14.html
-bindkey -v
-bindkey -M vicmd "H" vi-beginning-of-line
-bindkey -M vicmd "L" vi-end-of-line 
-bindkey -M vicmd "k" history-beginning-search-backward
-bindkey -M vicmd "j" history-beginning-search-forward 
-bindkey -M viins "jk" vi-cmd-mode
+# bindkey -v
+# bindkey -M vicmd "H" vi-beginning-of-line
+# bindkey -M vicmd "L" vi-end-of-line 
+# bindkey -M vicmd "k" history-beginning-search-backward
+# bindkey -M vicmd "j" history-beginning-search-forward 
+# bindkey -M viins "jk" vi-cmd-mode
 
 # Change cursor shape for different vi modes.
-function zle-keymap-select {
-  if [[ ${KEYMAP} == vicmd ]] ||
-     [[ $1 = 'block' ]]; then
-    echo -ne '\e[1 q'
-
-  elif [[ ${KEYMAP} == main ]] ||
-       [[ ${KEYMAP} == viins ]] ||
-       [[ ${KEYMAP} = '' ]] ||
-       [[ $1 = 'beam' ]]; then
-    echo -ne '\e[5 q'
-  fi
-}
-zle -N zle-keymap-select
+# function zle-keymap-select {
+#   if [[ ${KEYMAP} == vicmd ]] ||
+#      [[ $1 = 'block' ]]; then
+#     echo -ne '\e[1 q'
+# 
+#   elif [[ ${KEYMAP} == main ]] ||
+#        [[ ${KEYMAP} == viins ]] ||
+#        [[ ${KEYMAP} = '' ]] ||
+#        [[ $1 = 'beam' ]]; then
+#     echo -ne '\e[5 q'
+#   fi
+# }
+# zle -N zle-keymap-select
 
 # Use beam shape cursor on startup.
 # echo -ne '\e[5 q'
 
 # Use beam shape cursor for each new prompt.
-preexec() {
-   echo -ne '\e[5 q'
-}
+# preexec() {
+#    echo -ne '\e[5 q'
+# }
