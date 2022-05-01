@@ -42,10 +42,10 @@ noremap bi :action ForceStepInto<CR>
 noremap bn :action ForceStepOver<CR>
 noremap be :action XDebugger.Evaluation.Dialog.Tree.Popup<CR>
 
-noremap gl :action NextTab<CR>
-noremap gh :action PreviousTab<CR>
+noremap R :action NextTab<CR>
+noremap E :action PreviousTab<CR>
 noremap gr :action FindUsages<CR>
-noremap R  :action RenameElement<CR>
+noremap <Leader>R  :action RenameElement<CR>
 noremap gw :action OpenProjectWindows<CR>
 noremap gm :action GotoNextBookmark<CR>
 noremap gM :action GotoPreviousBookmark<CR>

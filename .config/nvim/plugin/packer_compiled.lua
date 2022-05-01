@@ -154,6 +154,11 @@ _G.packer_plugins = {
     path = "/Users/fufangjie/.local/share/nvim/site/pack/packer/start/lualine.nvim",
     url = "https://github.com/nvim-lualine/lualine.nvim"
   },
+  ["monokai.nvim"] = {
+    loaded = true,
+    path = "/Users/fufangjie/.local/share/nvim/site/pack/packer/start/monokai.nvim",
+    url = "https://github.com/tanvirtin/monokai.nvim"
+  },
   ["nlsp-settings.nvim"] = {
     loaded = true,
     path = "/Users/fufangjie/.local/share/nvim/site/pack/packer/start/nlsp-settings.nvim",

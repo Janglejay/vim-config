@@ -10,6 +10,8 @@ export ZSH="/Users/fufangjie/.oh-my-zsh"
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 #ZSH_THEME="jonathan"
 ZSH_THEME="robbyrussell"
+# ZSH_THEME="af-magic"
+
 #ZSH_THEME="apple"
 #ZSH_THEME="avit"
 #ZSH_THEME="kafeitu"
@@ -74,7 +76,12 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+plugins=( 
+    git
+    # other plugins...
+    zsh-autosuggestions
+    zsh-syntax-highlighting 
+)
 
 source $ZSH/oh-my-zsh.sh
 

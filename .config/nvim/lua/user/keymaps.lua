@@ -34,8 +34,8 @@ local keymap = vim.api.nvim_set_keymap
 -- keymap("n", "<C-Right>", ":vertical resize +2<CR>", opts)
 
 -- Navigate buffers
-keymap("n", "gl", ":bnext<CR>", opts)
-keymap("n", "gh", ":bprevious<CR>", opts)
+keymap("n", "R", ":bnext<CR>", opts)
+keymap("n", "E", ":bprevious<CR>", opts)
 keymap("n", "=", "<cmd>lua vim.lsp.buf.formatting()<cr>", opts)
 -- keymap("n", "ma", "<cmd>Telescope vim_bookmarks current_file<cr>", opts)
 keymap("n", "ma", "<cmd>Telescope vim_bookmarks all<cr>", opts)
