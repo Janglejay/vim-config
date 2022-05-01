@@ -5,6 +5,7 @@ let mapleader=","
 " ESC delay
 set ttimeoutlen=0
 set timeoutlen=800
+" noremap <C-i> <nop>
 " ----------
 " origin keymap
 " ----------
@@ -58,12 +59,12 @@ noremap K {
 " ----------
 " Edit Json
 " ----------
-command! JsonFormat :%!jq .
+" command! JsonFormat :%!jq .
 
-augroup json_edit_group
-    autocmd!
-    autocmd BufNewFile,BufRead *.json nmap <silent><buffer> = :JsonFormat<CR>
-augroup END
+" augroup json_edit_group
+"     autocmd!
+"     autocmd BufNewFile,BufRead *.json nmap <silent><buffer> = :JsonFormat<CR>
+" augroup END
 " command! JsonFormat :execute '%!python2 -m json.tool'
 " \ | :execute '%!python2 -c "import re,sys;sys.stdout.write(re.sub(r\"\\\u[0-9a-f]{4}\", lambda m:m.group().decode(\"unicode_escape\").encode(\"utf-8\"), sys.stdin.read()))"'
 "augroup json_edit_group
@@ -79,6 +80,16 @@ augroup java_edit_group
     autocmd!
     autocmd BufNewFile,BufRead *.java noremap <silent><buffer> ; $a;<ESC>
     autocmd BufNewFile,BufRead *.java noremap <silent><buffer>{ $a {<CR>}<ESC>O
+augroup END
+
+" ----------
+" Edit Java
+" ----------
+augroup go_edit_group
+    autocmd!
+    autocmd BufNewFile,BufRead *.go noremap <silent><buffer> ; $a;<ESC>
+    autocmd BufNewFile,BufRead *.go noremap <silent><buffer>{ $a {<CR>}<ESC>O
+    autocmd BufNewFile,BufRead *.go nnoremap <silent><buffer> zr :!go run %:p<CR>
 augroup END
 
 " ----------
@@ -118,7 +129,7 @@ augroup lua_edit_group
     " autocmd BufNewFile,BufRead *.lua nnoremap <silent><buffer> <Leader>r :!/opt/homebrew/bin/lua %:p<CR>
     " autocmd BufNewFile,BufRead *.lua vnoremap <silent><buffer> <Leader>r <ESC>:!/opt/homebrew/bin/lua %:p<CR>
     autocmd BufNewFile,BufRead *.lua nnoremap <silent><buffer> zr :!/opt/homebrew/bin/lua %:p<CR>
-    autocmd BufNewFile,BufRead *.lua vnoremap <silent><buffer> zr <ESC>:!/opt/homebrew/bin/lua %:p<CR>
+    " autocmd BufNewFile,BufRead *.lua vnoremap <silent><buffer> zr <ESC>:!/opt/homebrew/bin/lua %:p<CR>
     autocmd BufNewFile,BufRead *.lua noremap <silent><buffer> ; $a;<ESC>
     autocmd BufNewFile,BufRead *.lua noremap <silent><buffer>{ $a {<CR>}<ESC>O
 augroup END
@@ -170,10 +181,10 @@ set splitright
 
 " map <C-w> <C-w><C-w>
 " inoremap <C-w> <ESC><C-w><C-w>
-noremap <Leader>h <C-w>h
-noremap <Leader>j <C-w>j
-noremap <Leader>k <C-w>k
-noremap <Leader>l <C-w>l
+" noremap <Leader>h <C-w>h
+" noremap <Leader>j <C-w>j
+" noremap <Leader>k <C-w>k
+" noremap <Leader>l <C-w>l
 
 " ----------
 " Search
@@ -193,29 +204,29 @@ noremap <silent> <Leader>n :nohlsearch<CR>
 " noremap m `
 " noremap M m
 " one page mark
-noremap mm mm
-noremap gm `m
-" other page mark
-noremap m1 mA
-noremap m2 mB
-noremap m3 mC
-noremap m4 mD
-noremap g1 `A
-noremap g2 `B
-noremap g3 `C
-noremap g4 `D
-noremap m5 mE
-noremap m6 mF
-noremap m7 mG
-noremap m8 mH
-noremap g5 `E
-noremap g6 `F
-noremap g7 `G
-noremap g8 `H
-noremap m9 mI
-noremap m0 mJ
-noremap g9 `I
-noremap g0 `J
+" noremap mm mm
+" noremap gm `m
+" " other page mark
+" noremap m1 mA
+" noremap m2 mB
+" noremap m3 mC
+" noremap m4 mD
+" noremap g1 `A
+" noremap g2 `B
+" noremap g3 `C
+" noremap g4 `D
+" noremap m5 mE
+" noremap m6 mF
+" noremap m7 mG
+" noremap m8 mH
+" noremap g5 `E
+" noremap g6 `F
+" noremap g7 `G
+" noremap g8 `H
+" noremap m9 mI
+" noremap m0 mJ
+" noremap g9 `I
+" noremap g0 `J
 
 " noremap go '^
 

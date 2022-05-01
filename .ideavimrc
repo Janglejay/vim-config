@@ -47,6 +47,8 @@ noremap gh :action PreviousTab<CR>
 noremap gr :action FindUsages<CR>
 noremap R  :action RenameElement<CR>
 noremap gw :action OpenProjectWindows<CR>
+noremap gm :action GotoNextBookmark<CR>
+noremap gM :action GotoPreviousBookmark<CR>
 " noremap gi :action GotoImplementation<CR>
 " noremap gd :action GotoDeclaration<CR>
 " noremap gu :action GotoSuperMethod<CR>
@@ -75,3 +77,6 @@ noremap = :action ReformatCode<CR>
 noremap wt :action ActivateTerminalToolWindow<CR>
 noremap wd :action ActivateDebugToolWindow<CR>
 noremap wr :action ActivateRunToolWindow<CR>
+
+noremap ma :action ShowBookmarks<CR>
+noremap mm :action ToggleBookmark<CR>

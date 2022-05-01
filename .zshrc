@@ -121,6 +121,7 @@ alias cj='cd /Users/fufangjie/Documents/tmp/json_buffer'
 alias cn='cd $NEO_VIM'
 alias cs='cd $S'
 alias ct='cd $T'
+alias cg='cd /Users/fufangjie/MyProjects/go_project'
 
 alias t='tmux'
 
