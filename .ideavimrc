@@ -9,7 +9,7 @@ source ~/.vim/plugin/vim-surround.vim
 " set incsearch
 set idearefactormode=keep
 noremap p "*p
-vnoremap p "1d"*P
+vnoremap p "_d"*P
 "noremap <Del
 set surround
 set easymotion
@@ -18,7 +18,7 @@ noremap <S-CR> ,
 noremap ; $a;<ESC>
 noremap{ $a {<CR>
 " noremap <Leader>f ^f<SPACE>lciw;
-noremap <Leader>f ^f=2hciw
+noremap <Leader>x ^f=2hciw
 
 " Don't use Ex mode, use Q for formatting.
 " map Q gq
@@ -33,18 +33,18 @@ noremap <Leader>f ^f=2hciw
 "map \b <Action>(ToggleLineBreakpoint)
 
 " Find more examples here: https://jb.gg/share-ideavimrc
-noremap bb :action ToggleLineBreakpoint<CR>
-noremap br :action Resume<CR>
-noremap bp :action Debugger.PopFrame<CR>
-noremap bv :action ViewBreakpoints<CR>
-noremap bf :action ForceRunToCursor<CR>
-noremap bi :action ForceStepInto<CR>
-noremap bn :action ForceStepOver<CR>
+nnoremap bb :action ToggleLineBreakpoint<CR>
+nnoremap br :action Resume<CR>
+nnoremap bp :action Debugger.PopFrame<CR>
+nnoremap bv :action ViewBreakpoints<CR>
+nnoremap bf :action ForceRunToCursor<CR>
+nnoremap bi :action ForceStepInto<CR>
+nnoremap bn :action ForceStepOver<CR>
 noremap be :action XDebugger.Evaluation.Dialog.Tree.Popup<CR>
 
-noremap R :action NextTab<CR>
-noremap E :action PreviousTab<CR>
-noremap gr :action FindUsages<CR>
+nnoremap R :action NextTab<CR>
+nnoremap E :action PreviousTab<CR>
+nnoremap gr :action FindUsages<CR>
 noremap <Leader>R  :action RenameElement<CR>
 noremap gw :action OpenProjectWindows<CR>
 noremap gm :action GotoNextBookmark<CR>
@@ -53,30 +53,37 @@ noremap gM :action GotoPreviousBookmark<CR>
 " noremap gd :action GotoDeclaration<CR>
 " noremap gu :action GotoSuperMethod<CR>
 
-noremap zR :action Run<CR>
-noremap zr :action RunClass<CR>
-noremap zD :action Debug<CR>
-noremap zd :action DebugClass<CR>
+nnoremap zR :action Run<CR>
+nnoremap zr :action RunClass<CR>
+nnoremap zD :action Debug<CR>
+nnoremap zd :action DebugClass<CR>
 
 nnoremap gcc :action CommentByLineComment<CR>
 vnoremap gc :action CommentByLineComment<CR>
 noremap gC :action CommentByBlockComment<CR>
 " noremap gd :action Git.CompareWithBranch<CR>
 
-noremap <Leader>c :action CloseContent<CR>
-noremap <Leader>C :action CloseAllEditorsButActive<CR>
-noremap <Leader>e :action SelectIn<CR>
-noremap <Leader>w :action HideAllWindows<CR>
+nnoremap <Leader>c :action CloseContent<CR>
+nnoremap <Leader>C :action CloseAllEditorsButActive<CR>
+nnoremap <Leader>e :action SelectIn<CR>
+nnoremap <Leader>w :action HideAllWindows<CR>
 
-noremap zz :action CollapseRegion<CR>
-noremap zZ :action CollapseAllRegions<CR>
-noremap <Leader>z :action ExpandRegion<CR>
-noremap <Leader>Z :action ExpandAllRegions<CR>
-noremap = :action ReformatCode<CR>
+nnoremap zz :action CollapseRegion<CR>
+nnoremap zZ :action CollapseAllRegions<CR>
+nnoremap <Leader>z :action ExpandRegion<CR>
+nnoremap <Leader>Z :action ExpandAllRegions<CR>
+nnoremap = :action ReformatCode<CR>
 
-noremap wt :action ActivateTerminalToolWindow<CR>
-noremap wd :action ActivateDebugToolWindow<CR>
-noremap wr :action ActivateRunToolWindow<CR>
+nnoremap wt :action ActivateTerminalToolWindow<CR>
+nnoremap wd :action ActivateDebugToolWindow<CR>
+nnoremap wr :action ActivateRunToolWindow<CR>
+nnoremap ww :action ToolWindowsGroup<CR>
 
-noremap ma :action ShowBookmarks<CR>
-noremap mm :action ToggleBookmark<CR>
+nnoremap ma :action ShowBookmarks<CR>
+nnoremap mm :action ToggleBookmark<CR>
+
+nnoremap <Leader>F :action FindInPath<CR>
+nnoremap <Leader>f :action SearchEverywhere<CR>
+nnoremap <Leader>p :action RecentFiles<CR>
+nnoremap <C-p> :action ParameterInfo<CR>
+inoremap <C-p> <ESC>:action ParameterInfo<CR>a

@@ -89,6 +89,7 @@ source $ZSH/oh-my-zsh.sh
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
+export V_S=/Users/fufangjie/Documents/Learn/vocational_skills
 export MAVEN_HOME=/opt/maven/apache-maven-3.8.1
 export PATH=$PATH:$MAVEN_HOME/bin
 
@@ -142,6 +143,8 @@ alias vim='nvim'
 alias vi='nvim'
 
 alias sd='source $S/format_date.sh'
+alias cl='source $S/goto_learn.sh'
+alias cll='cd /Users/fufangjie/Documents/Learn'
 
 
 # open command vim mode edit

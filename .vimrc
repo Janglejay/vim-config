@@ -2,14 +2,19 @@
 "
 " autocmd BufWrite * :echom "Writing buffer!"
 let mapleader=","
+
 " ESC delay
 set ttimeoutlen=0
-set timeoutlen=800
+set timeoutlen=500
+" set timeoutlen=1500
 " noremap <C-i> <nop>
 " ----------
 " origin keymap
 " ----------
  nnoremap U :redo<CR>
+ nnoremap <C-u> <C-d>
+ nnoremap <C-e> <C-u>
+ nnoremap <C-d> <C-e>
 "  nnoremap <CR> o<Esc>
  noremap <CR> ;
 " use in GUI
@@ -105,13 +110,22 @@ augroup markdown_edit_group
     " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>p <Insert>![<++>](<++>)<ESC>
     " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>m <Insert>- [<++>]<ESC>
                                                      
-    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>f <ESC>/<++><CR>:nohl<CR>4"-cl
-    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>c ```<CR><++><CR>```
-    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>b **<++>**
-    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>s ~~<++>~~
-    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>l [<++>](<++>)
-    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>p ![<++>](<++>)
-    autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>m - [ ]
+    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>x <ESC>/<++><CR>:nohl<CR>4"-cl
+    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>c ```<CR><++><CR>```
+    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>b **<++>**
+    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>s ~~<++>~~
+    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>l [<++>](<++>)
+    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>p ![<++>](<++>)
+    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>m - [ ]
+
+    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>x /<++><CR>:nohl<CR>4"-cl
+    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>C i```<CR><++><CR>```<ESC>
+    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>c i`<++>`<ESC>
+    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>b i**<++>**<ESC>
+    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>s i~~<++>~~<ESC>
+    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>o i[<++>](<++>)<ESC>
+    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>p i![<++>](<++>)<ESC>
+    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>m i- [ ]<ESC>
 
     " autocmd BufNewFile,BufRead *.md vmap <silent><buffer> <Leader>c <Leader>d<Insert>```<CR>```<CR><ESC>kO<ESC><Leader>p<ESC>
     " autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>s d<Insert>~~~~<ESC>2hp
@@ -146,7 +160,7 @@ nnoremap cc "-cc
 nnoremap s "-s
 " vnoremap p "1dp
 " 防止每次都在后面粘贴，不符合习惯
-vnoremap p "1dP
+vnoremap p "_dP
 noremap <Leader>y "1y
 nnoremap <Leader>r viw"1dP
 " noremap p "0p
@@ -181,10 +195,10 @@ set splitright
 
 " map <C-w> <C-w><C-w>
 " inoremap <C-w> <ESC><C-w><C-w>
-" noremap <Leader>h <C-w>h
-" noremap <Leader>j <C-w>j
-" noremap <Leader>k <C-w>k
-" noremap <Leader>l <C-w>l
+noremap gh <C-w>h
+noremap gj <C-w>j
+noremap gk <C-w>k
+noremap gl <C-w>l
 
 " ----------
 " Search
@@ -238,7 +252,7 @@ noremap L <End>
 " map H <Home>
 " noremap H <Home> 
 noremap H ^
-noremap gf <C-]>
+" noremap gf <C-]>
 noremap gn %
 
 " ----------
