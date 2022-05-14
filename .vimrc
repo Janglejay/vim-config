@@ -40,6 +40,8 @@ set timeoutlen=500
 " 翻一段（空行为一段）
 noremap J }
 noremap K {
+noremap <Leader>j *
+noremap <Leader>k #
 noremap W b
 noremap zc zz
 noremap zz zc
@@ -213,6 +215,8 @@ noremap gh <C-w>h
 noremap gj <C-w>j
 noremap gk <C-w>k
 noremap gl <C-w>l
+noremap <Leader>v :sp<CR>
+noremap <Leader>V :vs<CR>
 
 " ----------
 " Search

@@ -23,6 +23,7 @@ vnoremap p "_d"*P
 set surround
 set easymotion
 noremap <S-CR> ,
+noremap <Leader>q :q!<CR>
 
 noremap ; $a;<ESC>
 noremap{ $a {<CR>
