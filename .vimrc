@@ -35,6 +35,11 @@ set timeoutlen=500
 " 翻一段（空行为一段）
 noremap J }
 noremap K {
+noremap W b
+noremap zc zz
+noremap zz zc
+noremap zZ zM
+noremap zO zR
 " noremap T <Insert><Tab>
 
 " ----------
@@ -124,7 +129,7 @@ augroup markdown_edit_group
     autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>b i**<++>**<ESC>
     autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>s i~~<++>~~<ESC>
     autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>o i[<++>](<++>)<ESC>
-    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>p i![<++>](<++>)<ESC>
+    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>O i![<++>](<++>)<ESC>
     autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>m i- [ ]<ESC>
 
     " autocmd BufNewFile,BufRead *.md vmap <silent><buffer> <Leader>c <Leader>d<Insert>```<CR>```<CR><ESC>kO<ESC><Leader>p<ESC>
@@ -152,6 +157,8 @@ augroup END
 " Copy and paste or replace
 " --------------
 set clipboard=unnamed
+nnoremap Y ggyG
+nnoremap V ggvG
 noremap <Leader>d "1d
 noremap <Leader>p "1p
 noremap x "-x
@@ -295,10 +302,14 @@ call plug#begin("~/.vim/plugged")
 " Plug 'scrooloose/syntastic'
 " Plug 'vim-airline/vim-airline'
 " Plug 'vim-airline/vim-airline-themes'
-" Plug 'preservim/nerdtree'
+Plug 'preservim/nerdtree'
+Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'instant-markdown/vim-instant-markdown', {'for': 'markdown', 'do': 'yarn install'}
+" Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install() }, 'for': ['markdown', 'vim-plug']}
 " Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
 Plug 'dhruvasagar/vim-table-mode'
+Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
+Plug 'ryanoasis/vim-devicons'
 " Plug 'flazz/vim-colorschemes'
 call plug#end()

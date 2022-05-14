@@ -49,9 +49,9 @@ noremap <Leader>R  :action RenameElement<CR>
 noremap gw :action OpenProjectWindows<CR>
 noremap gm :action GotoNextBookmark<CR>
 noremap gM :action GotoPreviousBookmark<CR>
-" noremap gi :action GotoImplementation<CR>
+noremap gi :action GotoImplementation<CR>
 " noremap gd :action GotoDeclaration<CR>
-" noremap gu :action GotoSuperMethod<CR>
+noremap gu :action GotoSuperMethod<CR>
 
 nnoremap zR :action Run<CR>
 nnoremap zr :action RunClass<CR>
@@ -61,29 +61,30 @@ nnoremap zd :action DebugClass<CR>
 nnoremap gcc :action CommentByLineComment<CR>
 vnoremap gc :action CommentByLineComment<CR>
 noremap gC :action CommentByBlockComment<CR>
-" noremap gd :action Git.CompareWithBranch<CR>
+" noremap gw :action Git.CompareWithBranch<CR>
+noremap <C-r> :action Vcs.RollbackChangedLines<CR>
 
 nnoremap <Leader>c :action CloseContent<CR>
 nnoremap <Leader>C :action CloseAllEditorsButActive<CR>
-nnoremap <Leader>e :action SelectIn<CR>
+nnoremap <Leader>p :action SelectIn<CR>
 nnoremap <Leader>w :action HideAllWindows<CR>
 
 nnoremap zz :action CollapseRegion<CR>
 nnoremap zZ :action CollapseAllRegions<CR>
-nnoremap <Leader>z :action ExpandRegion<CR>
-nnoremap <Leader>Z :action ExpandAllRegions<CR>
+nnoremap zo :action ExpandRegion<CR>
+nnoremap zO :action ExpandAllRegions<CR>
 nnoremap = :action ReformatCode<CR>
 
-nnoremap wt :action ActivateTerminalToolWindow<CR>
-nnoremap wd :action ActivateDebugToolWindow<CR>
-nnoremap wr :action ActivateRunToolWindow<CR>
-nnoremap ww :action ToolWindowsGroup<CR>
+nnoremap st :action ActivateTerminalToolWindow<CR>
+nnoremap sd :action ActivateDebugToolWindow<CR>
+nnoremap sr :action ActivateRunToolWindow<CR>
+nnoremap ss :action ToolWindowsGroup<CR>
 
 nnoremap ma :action ShowBookmarks<CR>
 nnoremap mm :action ToggleBookmark<CR>
 
 nnoremap <Leader>F :action FindInPath<CR>
 nnoremap <Leader>f :action SearchEverywhere<CR>
-nnoremap <Leader>p :action RecentFiles<CR>
+nnoremap <Leader>e :action RecentFiles<CR>
 nnoremap <C-p> :action ParameterInfo<CR>
 inoremap <C-p> <ESC>:action ParameterInfo<CR>a

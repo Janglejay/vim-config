@@ -82,7 +82,7 @@ telescope.setup {
       theme = "dropdown",
       previewer = false,
       -- find_command = { "find", "-type", "f" },
-      find_command = {"fd"},
+      find_command = { "fd" },
     },
     -- Default configuration for builtin pickers goes here:
     -- picker_name = {
@@ -93,6 +93,7 @@ telescope.setup {
     -- builtin picker
   },
   extensions = {
+    -- live_grep_raw = {}
     -- Your extension configuration goes here:
     -- extension_name = {
     --   extension_config_key = value,

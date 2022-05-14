@@ -35,8 +35,17 @@ local keymap = vim.api.nvim_set_keymap
 
 -- Navigate buffers
 keymap("n", "R", ":bnext<CR>", opts)
+
 keymap("n", "E", ":bprevious<CR>", opts)
 keymap("n", "=", "<cmd>lua vim.lsp.buf.formatting()<cr>", opts)
+
+keymap("n", "<C-r>", "<cmd>lua require 'gitsigns'.reset_hunk()<cr>", opts)
+keymap("n", "gp", "<cmd>lua require 'gitsigns'.preview_hunk()<cr>", opts)
+keymap("n", "<C-f>", "<cmd>lua require 'gitsigns'.prev_hunk()<cr>", opts)
+keymap("n", "<C-d>", "<cmd>lua require 'gitsigns'.next_hunk()<cr>", opts)
+
+-- keymap("n", "gk", "<cmd>lua require 'gitsigns'.prev_hunk()<cr>", opts)
+-- keymap("n", "gj", "<cmd>lua require 'gitsigns'.next_hunk()<cr>", opts)
 -- keymap("n", "ma", "<cmd>Telescope vim_bookmarks current_file<cr>", opts)
 keymap("n", "ma", "<cmd>Telescope vim_bookmarks all<cr>", opts)
 keymap("n", "<C-n>", "<C-i>", opts)
