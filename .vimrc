@@ -1,7 +1,12 @@
+" exec "nohlsearch"
+" exec "highlight Cursor guifg=blue guibg=blue"
+" set highlight Cursor guifg=blue guibg=blue
+
 " let mapleader="\<SPACE>"
 "
 " autocmd BufWrite * :echom "Writing buffer!"
 let mapleader=","
+
 
 " ESC delay
 set ttimeoutlen=0
@@ -26,7 +31,7 @@ set timeoutlen=500
  vnoremap ~ <NOP>
 " vnoremap <ESC> <NOP>
  vnoremap u <ESC>
- cnoremap jk <ESC>
+ " cnoremap jk <ESC>
 " 这一段加上会使得命令模式中的上下键成为字符
 " cnoremap <ESC> <NOP>
 " 翻半页
@@ -40,6 +45,8 @@ noremap zc zz
 noremap zz zc
 noremap zZ zM
 noremap zO zR
+noremap vi> T>vt<
+" noremap ci> T>ct<
 " noremap T <Insert><Tab>
 
 " ----------
@@ -160,7 +167,7 @@ set clipboard=unnamed
 nnoremap Y ggyG
 nnoremap V ggvG
 noremap <Leader>d "1d
-noremap <Leader>p "1p
+" noremap <Leader>p "1p
 noremap x "-x
 noremap c "-c
 nnoremap cc "-cc

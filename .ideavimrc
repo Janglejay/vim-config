@@ -7,7 +7,16 @@ source ~/.vim/plugin/vim-surround.vim
 
 " Do incremental searching.
 " set incsearch
+" reference https://jungejason.github.io/ideavim/
+exec "nohlsearch"
 set idearefactormode=keep
+set NERDTree
+" set multiple-cursors
+let g:NERDTreeMapActivateNode='l'
+" let g:NERDTreeMapJumpParent='h'
+set argtextobj
+let g:argtextobj_pairs="[:],(:),<:>"
+set commentary
 noremap p "*p
 vnoremap p "_d"*P
 "noremap <Del
@@ -58,15 +67,18 @@ nnoremap zr :action RunClass<CR>
 nnoremap zD :action Debug<CR>
 nnoremap zd :action DebugClass<CR>
 
-nnoremap gcc :action CommentByLineComment<CR>
-vnoremap gc :action CommentByLineComment<CR>
+" nnoremap gcc :action CommentByLineComment<CR>
+" vnoremap gc :action CommentByLineComment<CR>
 noremap gC :action CommentByBlockComment<CR>
 " noremap gw :action Git.CompareWithBranch<CR>
 noremap <C-r> :action Vcs.RollbackChangedLines<CR>
+nnoremap ga :action ShowIntentionActions<CR>
+" nnoremap gc :action GotoClass<CR>
 
 nnoremap <Leader>c :action CloseContent<CR>
 nnoremap <Leader>C :action CloseAllEditorsButActive<CR>
-nnoremap <Leader>p :action SelectIn<CR>
+nnoremap <Leader>P :action SelectIn<CR>
+nnoremap <Leader>p :NERDTree<CR>
 nnoremap <Leader>w :action HideAllWindows<CR>
 
 nnoremap zz :action CollapseRegion<CR>
@@ -88,3 +100,4 @@ nnoremap <Leader>f :action SearchEverywhere<CR>
 nnoremap <Leader>e :action RecentFiles<CR>
 nnoremap <C-p> :action ParameterInfo<CR>
 inoremap <C-p> <ESC>:action ParameterInfo<CR>a
+nnoremap <C-s> :action FileStructurePopup<CR>

@@ -3,6 +3,9 @@ let NERDTreeMinimalUI = 1
 let NERDTreeChDirMode = 2
 let g:NERDTreeGitStatusConcealBrackets = 1
 
+" let g:NERDTreeMapActivateNode='l'
+let g:NERDTreeMapJumpParent='h'
+
 " let g:WebDevIconsDisableDefaultFolderSymbolColorFromNERDTreeDir = 1
 " let g:WebDevIconsDisableDefaultFileSymbolColorFromNERDTreeFile = 1
 let g:NERDTreeHighlightFolders = 1 " enables folder icon highlighting using exact match
