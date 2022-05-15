@@ -6,6 +6,8 @@
 "
 " autocmd BufWrite * :echom "Writing buffer!"
 let mapleader=","
+noremap q <NOP>
+noremap \ q
 
 
 " ESC delay

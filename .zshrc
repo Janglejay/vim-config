@@ -153,9 +153,9 @@ alias te='source $S/tran.sh'
 # website: http://bolyai.cs.elte.hu/zsh-manual/zsh_14.html
 # bindkey -v
 # bindkey -M vicmd "H" vi-beginning-of-line
-# bindkey -M vicmd "L" vi-end-of-line 
+# bindkey -M vicmd "L" vi-end-of-line
 # bindkey -M vicmd "k" history-beginning-search-backward
-# bindkey -M vicmd "j" history-beginning-search-forward 
+# bindkey -M vicmd "j" history-beginning-search-forward
 # bindkey -M viins "jk" vi-cmd-mode
 
 # Change cursor shape for different vi modes.
