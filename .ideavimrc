@@ -17,6 +17,8 @@ let g:NERDTreeMapActivateNode='l'
 set argtextobj
 let g:argtextobj_pairs="[:],(:),<:>"
 set commentary
+set highlightedyank
+let g:highlightedyank_highlight_duration = "200"
 noremap p "*p
 vnoremap p "_d"*P
 "noremap <Del
@@ -61,12 +63,18 @@ noremap gm :action GotoNextBookmark<CR>
 noremap gM :action GotoPreviousBookmark<CR>
 noremap gi :action GotoImplementation<CR>
 " noremap gd :action GotoDeclaration<CR>
-noremap gu :action GotoSuperMethod<CR>
+nnoremap gu :action GotoSuperMethod<CR>
+nnoremap sl :action NextWindow<CR>
+nnoremap sh :action PreviousWindow<CR>
+nnoremap se :action EditSourceInNewWindow<CR>
+nnoremap sp :action PasteGroup<CR>
+
 
 nnoremap zR :action Run<CR>
 nnoremap zr :action RunClass<CR>
 nnoremap zD :action Debug<CR>
 nnoremap zd :action DebugClass<CR>
+nnoremap zb :action Java.BuildMenu<CR>
 
 " nnoremap gcc :action CommentByLineComment<CR>
 " vnoremap gc :action CommentByLineComment<CR>
@@ -79,7 +87,8 @@ nnoremap ga :action ShowIntentionActions<CR>
 nnoremap <Leader>c :action CloseContent<CR>
 nnoremap <Leader>C :action CloseAllEditorsButActive<CR>
 nnoremap <Leader>P :action SelectIn<CR>
-nnoremap <Leader>p :NERDTree<CR>
+" nnoremap <Leader>p :NERDTree<CR>
+nnoremap <Leader>p :NERDTreeFind<CR>
 nnoremap <Leader>w :action HideAllWindows<CR>
 
 nnoremap zz :action CollapseRegion<CR>
@@ -101,4 +110,4 @@ nnoremap <Leader>f :action SearchEverywhere<CR>
 nnoremap <Leader>e :action RecentFiles<CR>
 nnoremap <C-p> :action ParameterInfo<CR>
 inoremap <C-p> <ESC>:action ParameterInfo<CR>a
-nnoremap <C-s> :action FileStructurePopup<CR>
+nnoremap <Leader>s :action FileStructurePopup<CR>

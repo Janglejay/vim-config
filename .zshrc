@@ -8,13 +8,12 @@ export ZSH="/Users/fufangjie/.oh-my-zsh"
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-#ZSH_THEME="jonathan"
+# ZSH_THEME="jonathan"
 ZSH_THEME="robbyrussell"
 # ZSH_THEME="af-magic"
 
-#ZSH_THEME="apple"
-#ZSH_THEME="avit"
-#ZSH_THEME="kafeitu"
+# ZSH_THEME="apple"
+# ZSH_THEME="kafeitu"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -145,6 +144,9 @@ alias vi='nvim'
 alias sd='source $S/format_date.sh'
 alias cl='source $S/goto_learn.sh'
 alias cll='cd /Users/fufangjie/Documents/Learn'
+
+alias tt='source $S/tran.sh zh'
+alias te='source $S/tran.sh'
 
 
 # open command vim mode edit

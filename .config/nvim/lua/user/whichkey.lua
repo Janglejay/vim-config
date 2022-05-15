@@ -85,7 +85,8 @@ local mappings = {
     "Buffers",
   },
   -- ["p"] = { "<cmd>NvimTreeToggle<cr>", "Explorer" },
-  ["p"] = { "<cmd>NERDTreeToggle<CR>", "Explorer" },
+  -- ["p"] = { "<cmd>NERDTreeToggle<CR>", "Explorer" },
+  ["p"] = { "<cmd>NERDTreeFind<CR>", "Explorer" },
   -- ["p"] = { "<cmd>NERDTreeFocus<CR>", "Explorer" },
   ["w"] = { "<cmd>w!<CR>", "Save" },
   ["q"] = { "<cmd>q!<CR>", "Quit" },
@@ -163,7 +164,7 @@ local mappings = {
       "Workspace Symbols",
     },
   },
-  s = {
+  S = {
     name = "Search",
     b = { "<cmd>Telescope git_branches<cr>", "Checkout branch" },
     c = { "<cmd>Telescope colorscheme<cr>", "Colorscheme" },

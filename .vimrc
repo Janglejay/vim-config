@@ -215,8 +215,8 @@ noremap gh <C-w>h
 noremap gj <C-w>j
 noremap gk <C-w>k
 noremap gl <C-w>l
-noremap <Leader>V :sp<CR>
-noremap <Leader>v :vs<CR>
+noremap gV :sp<CR>
+noremap gv :vs<CR>
 
 " ----------
 " Search
