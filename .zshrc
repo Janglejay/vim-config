@@ -124,11 +124,12 @@ export NEO_VIM="/Users/fufangjie/.config/nvim/"
 alias cc='cd /Users/fufangjie/Company/JavaProjects'
 alias cm='cd /Users/fufangjie/MyProjects'
 alias cdd='cd /Users/fufangjie/Documents'
-alias cj='cd /Users/fufangjie/Documents/tmp/json_buffer'
 alias cn='cd $NEO_VIM'
 alias cs='cd $S'
 alias ct='cd $T'
 alias cg='cd /Users/fufangjie/MyProjects/go_project'
+alias cr='cd /Users/fufangjie/MyProjects/rust_project'
+alias cj='cd /Users/fufangjie/MyProjects/java_project'
 
 alias t='tmux'
 
@@ -146,7 +147,7 @@ alias cl='source $S/goto_learn.sh'
 alias cll='cd /Users/fufangjie/Documents/Learn'
 
 alias tt='source $S/tran.sh zh'
-alias te='source $S/tran.sh'
+alias te='source $S/tran.sh en'
 
 
 # open command vim mode edit

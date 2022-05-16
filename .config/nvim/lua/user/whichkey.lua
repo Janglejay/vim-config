@@ -91,6 +91,7 @@ local mappings = {
   ["w"] = { "<cmd>w!<CR>", "Save" },
   ["q"] = { "<cmd>q!<CR>", "Quit" },
   ["c"] = { "<cmd>Bdelete!<CR>", "Close Buffer" },
+  ["C"] = {"<cmd>%bd|e#|bd#<CR>", "Close other buffers"},
   ["n"] = { "<cmd>nohlsearch<CR>", "No Highlight" },
   ["f"] = {
     "<cmd>lua require('telescope.builtin').find_files(require('telescope.themes').get_dropdown{previewer = false})<cr>",
@@ -99,7 +100,9 @@ local mappings = {
   -- ["F"] = { "<cmd>Telescope live_grep theme=ivy<cr>", "Find Text" },
   ["F"] = { "<cmd>Telescope live_grep<CR>", "Find Text" },
   ["e"] = { "<cmd>lua require('telescope').extensions.projects.projects()<cr>", "Projects" },
-  ["t"] = { "<cmd>ToggleTerm direction=float<cr>", "Terminal" },
+  -- ["t"] = { "<cmd>ToggleTerm direction=float<cr>", "Terminal" },
+  -- ["t"] = { "<cmd>ToggleTerm direction=horizontal<cr>", "Terminal" },
+
   --
   -- p = {
   --   name = "Packer",

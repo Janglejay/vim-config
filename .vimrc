@@ -6,6 +6,7 @@
 "
 " autocmd BufWrite * :echom "Writing buffer!"
 let mapleader=","
+
 noremap q <NOP>
 noremap \ q
 
@@ -19,8 +20,8 @@ set timeoutlen=500
 " origin keymap
 " ----------
  nnoremap U :redo<CR>
- nnoremap <C-u> <C-d>
- nnoremap <C-e> <C-u>
+ noremap <C-u> <C-d>
+ noremap <C-e> <C-u>
  nnoremap <C-d> <C-e>
 "  nnoremap <CR> o<Esc>
  noremap <CR> ;
@@ -104,7 +105,23 @@ augroup java_edit_group
 augroup END
 
 " ----------
-" Edit Java
+" Edit Rust
+" ----------
+augroup rust_edit_group
+  autocmd!
+  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer> ; $a;<ESC>
+  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>{ $a {<CR>}<ESC>O
+  " autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zr :RustRun<CR>
+  " autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zR :!cargo run<CR>
+  " autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zr <cmd>lua _RUST_TOGGLE()<CR>
+  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zr <cmd>TermExec cmd="cargo run" dir="."<CR>
+  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zb <cmd>TermExec cmd="cargo build" dir="."<CR>
+  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zc <cmd>TermExec cmd="cargo check" dir="."<CR>
+  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zR :RustRun<CR>
+augroup END
+
+" ----------
+" Edit go
 " ----------
 augroup go_edit_group
     autocmd!
@@ -168,8 +185,8 @@ augroup END
 " Copy and paste or replace
 " --------------
 set clipboard=unnamed
-nnoremap Y ggyG
-nnoremap V ggvG
+nnoremap Y gg^yG<End>
+nnoremap V gg^vG<End>
 noremap <Leader>d "1d
 " noremap <Leader>p "1p
 noremap x "-x
@@ -325,5 +342,6 @@ Plug 'tpope/vim-surround'
 Plug 'dhruvasagar/vim-table-mode'
 Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
 Plug 'ryanoasis/vim-devicons'
+" Plug 'rust-lang/rust.vim'
 " Plug 'flazz/vim-colorschemes'
 call plug#end()

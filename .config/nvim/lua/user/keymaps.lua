@@ -49,6 +49,8 @@ keymap("n", "<C-d>", "<cmd>lua require 'gitsigns'.next_hunk()<cr>", opts)
 -- keymap("n", "ma", "<cmd>Telescope vim_bookmarks current_file<cr>", opts)
 keymap("n", "ma", "<cmd>Telescope vim_bookmarks all<cr>", opts)
 keymap("n", "<C-n>", "<C-i>", opts)
+keymap("n", "st", "<cmd>ToggleTerm direction=horizontal<cr>", opts)
+
 -- keymap("n", "<C-[>", "<C-i>", opts)
 -- keymap("n", "<Leader>q", ":bdelete<CR>", opts)
 
