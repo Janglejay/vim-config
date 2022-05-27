@@ -45,69 +45,68 @@ noremap <Leader>x ^f=2hciw
 "map \b <Action>(ToggleLineBreakpoint)
 
 " Find more examples here: https://jb.gg/share-ideavimrc
-nnoremap bb :action ToggleLineBreakpoint<CR>
-nnoremap br :action Resume<CR>
-nnoremap bp :action Debugger.PopFrame<CR>
-nnoremap bv :action ViewBreakpoints<CR>
-nnoremap bf :action ForceRunToCursor<CR>
-nnoremap bi :action ForceStepInto<CR>
-nnoremap bn :action ForceStepOver<CR>
-noremap be :action XDebugger.Evaluation.Dialog.Tree.Popup<CR>
+nmap bb <Action>(ToggleLineBreakpoint)
+nmap br <Action>(Resume)
+nmap bp <Action>(Debugger.PopFrame)
+nmap bv <Action>(ViewBreakpoints)
+nmap bf <Action>(ForceRunToCursor)
+nmap bi <Action>(ForceStepInto)
+nmap bn <Action>(ForceStepOver)
+map be <Action>(XDebugger.Evaluation.Dialog.Tree.Popup)
 
-nnoremap R :action NextTab<CR>
-nnoremap E :action PreviousTab<CR>
-nnoremap gr :action FindUsages<CR>
-noremap <Leader>R  :action RenameElement<CR>
-noremap gw :action OpenProjectWindows<CR>
-noremap gm :action GotoNextBookmark<CR>
-noremap gM :action GotoPreviousBookmark<CR>
-noremap gi :action GotoImplementation<CR>
-" noremap gd :action GotoDeclaration<CR>
-nnoremap gu :action GotoSuperMethod<CR>
-nnoremap sl :action NextWindow<CR>
-nnoremap sh :action PreviousWindow<CR>
-nnoremap se :action EditSourceInNewWindow<CR>
-nnoremap sp :action PasteGroup<CR>
+nmap R <Action>(NextTab)
+nmap E <Action>(PreviousTab)
+nmap gr <Action>(FindUsages)
+map <Leader>R  <Action>(RenameElement)
+map gw <Action>(OpenProjectWindows)
+map gm <Action>(GotoNextBookmark)
+map gM <Action>(GotoPreviousBookmark)
+map gi <Action>(GotoImplementation)
+" noremap gd <Action>(GotoDeclaration)
+nmap gu <Action>(GotoSuperMethod)
+nmap sl <Action>(NextWindow)
+nmap sh <Action>(PreviousWindow)
+nmap sw <Action>(EditSourceInNewWindow)
+nmap sp <Action>(PasteGroup)
+nmap st <Action>(ActivateTerminalToolWindow)
+nmap sd <Action>(ActivateDebugToolWindow)
+nmap sr <Action>(ActivateRunToolWindow)
+nmap ss <Action>(ToolWindowsGroup)
 
 
-nnoremap zR :action Run<CR>
-nnoremap zr :action RunClass<CR>
-nnoremap zD :action Debug<CR>
-nnoremap zd :action DebugClass<CR>
-nnoremap zb :action Java.BuildMenu<CR>
+nmap zR <Action>(Run)
+nmap zr <Action>(RunClass)
+nmap zD <Action>(Debug)
+nmap zd <Action>(DebugClass)
+nmap zb <Action>(Java.BuildMenu)
 
-" nnoremap gcc :action CommentByLineComment<CR>
-" vnoremap gc :action CommentByLineComment<CR>
-noremap gC :action CommentByBlockComment<CR>
-" noremap gw :action Git.CompareWithBranch<CR>
-noremap <C-r> :action Vcs.RollbackChangedLines<CR>
-nnoremap ga :action ShowIntentionActions<CR>
-" nnoremap gc :action GotoClass<CR>
+" nnoremap gcc <Action>(CommentByLineComment)
+" vnoremap gc <Action>(CommentByLineComment)
+map gC <Action>(CommentByBlockComment)
+" noremap gw <Action>(Git.CompareWithBranch)
+map <C-r> <Action>(Vcs.RollbackChangedLines)
+nmap ga <Action>(ShowIntentionActions)
+" nnoremap gc <Action>(GotoClass)
 
-nnoremap <Leader>c :action CloseContent<CR>
-nnoremap <Leader>C :action CloseAllEditorsButActive<CR>
-nnoremap <Leader>P :action SelectIn<CR>
+nmap <Leader>c <Action>(CloseContent)
+nmap <Leader>C <Action>(CloseAllEditorsButActive)
+nmap <Leader>P <Action>(SelectIn)
 " nnoremap <Leader>p :NERDTree<CR>
-nnoremap <Leader>p :NERDTreeFind<CR>
-nnoremap <Leader>w :action HideAllWindows<CR>
+nmap <Leader>p :NERDTreeFind<CR>
+nmap <Leader>w <Action>(HideAllWindows)
 
-nnoremap zz :action CollapseRegion<CR>
-nnoremap zZ :action CollapseAllRegions<CR>
-nnoremap zo :action ExpandRegion<CR>
-nnoremap zO :action ExpandAllRegions<CR>
-nnoremap = :action ReformatCode<CR>
+nmap zz <Action>(CollapseRegion)
+nmap zZ <Action>(CollapseAllRegions)
+nmap zo <Action>(ExpandRegion)
+nmap zO <Action>(ExpandAllRegions)
+nmap = <Action>(ReformatCode)
 
-nnoremap st :action ActivateTerminalToolWindow<CR>
-nnoremap sd :action ActivateDebugToolWindow<CR>
-nnoremap sr :action ActivateRunToolWindow<CR>
-nnoremap ss :action ToolWindowsGroup<CR>
+nmap ma <Action>(ShowBookmarks)
+nmap mm <Action>(ToggleBookmark)
 
-nnoremap ma :action ShowBookmarks<CR>
-nnoremap mm :action ToggleBookmark<CR>
-
-nnoremap <Leader>F :action FindInPath<CR>
-nnoremap <Leader>f :action SearchEverywhere<CR>
-nnoremap <Leader>e :action RecentFiles<CR>
-nnoremap <C-p> :action ParameterInfo<CR>
-inoremap <C-p> <ESC>:action ParameterInfo<CR>a
-nnoremap <Leader>s :action FileStructurePopup<CR>
+nmap <Leader>F <Action>(FindInPath)
+nmap <Leader>f <Action>(SearchEverywhere)
+nmap <Leader>e <Action>(RecentFiles)
+nmap <C-p> <Action>(ParameterInfo)
+imap <C-p> <Action>(ParameterInfo)
+nmap <Leader>s <Action>(FileStructurePopup)

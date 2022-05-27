@@ -1,4 +1,5 @@
-" exec "nohlsearch"
+"
+exec "nohlsearch"
 " exec "highlight Cursor guifg=blue guibg=blue"
 " set highlight Cursor guifg=blue guibg=blue
 
@@ -127,7 +128,8 @@ augroup go_edit_group
     autocmd!
     autocmd BufNewFile,BufRead *.go noremap <silent><buffer> ; $a;<ESC>
     autocmd BufNewFile,BufRead *.go noremap <silent><buffer>{ $a {<CR>}<ESC>O
-    autocmd BufNewFile,BufRead *.go nnoremap <silent><buffer> zr :!go run %:p<CR>
+    autocmd BufNewFile,BufRead *.go noremap <silent><buffer>zr <cmd>TermExec cmd="go run main.go" dir="."<CR>
+    " autocmd BufNewFile,BufRead *.go nnoremap <silent><buffer> zr :!go run %:p<CR>
 augroup END
 
 " ----------
@@ -316,9 +318,11 @@ set expandtab
 " set smartindent
 
 nnoremap <Tab> >>
-nnoremap <S-Tab> <<
+" nnoremap <S-Tab> <<
+nnoremap <BS> <<
 vnoremap <Tab> >
-vnoremap <S-Tab> < 
+" vnoremap <S-Tab> < 
+vnoremap <BS> < 
 
 " ----------
 " Filetype
