@@ -39,7 +39,7 @@ keymap("n", "R", ":bnext<CR>", opts)
 keymap("n", "E", ":bprevious<CR>", opts)
 keymap("n", "=", "<cmd>lua vim.lsp.buf.formatting()<cr>", opts)
 
-keymap("n", "<C-r>", "<cmd>lua require 'gitsigns'.reset_hunk()<cr>", opts)
+keymap("n", "<C-u>", "<cmd>lua require 'gitsigns'.reset_hunk()<cr>", opts)
 keymap("n", "gp", "<cmd>lua require 'gitsigns'.preview_hunk()<cr>", opts)
 keymap("n", "<C-f>", "<cmd>lua require 'gitsigns'.prev_hunk()<cr>", opts)
 keymap("n", "<C-d>", "<cmd>lua require 'gitsigns'.next_hunk()<cr>", opts)

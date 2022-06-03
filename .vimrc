@@ -8,9 +8,10 @@ exec "nohlsearch"
 " autocmd BufWrite * :echom "Writing buffer!"
 let mapleader=","
 
-noremap q <NOP>
-noremap \ q
-
+" noremap j gj 
+" noremap k gk
+nnoremap q <NOP>
+nnoremap \ q
 
 " ESC delay
 set ttimeoutlen=0
@@ -21,9 +22,10 @@ set timeoutlen=500
 " origin keymap
 " ----------
  nnoremap U :redo<CR>
- noremap <C-u> <C-d>
+ " noremap <C-u> <C-d>
+ noremap <C-r> <C-d>
  noremap <C-e> <C-u>
- nnoremap <C-d> <C-e>
+ " nnoremap <C-d> <C-e>
 "  nnoremap <CR> o<Esc>
  noremap <CR> ;
 " use in GUI
@@ -115,10 +117,10 @@ augroup rust_edit_group
   " autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zr :RustRun<CR>
   " autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zR :!cargo run<CR>
   " autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zr <cmd>lua _RUST_TOGGLE()<CR>
-  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zr <cmd>TermExec cmd="cargo run" dir="."<CR>
-  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zb <cmd>TermExec cmd="cargo build" dir="."<CR>
-  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zc <cmd>TermExec cmd="cargo check" dir="."<CR>
-  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zR :RustRun<CR>
+  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zr <cmd>w<CR><cmd>TermExec cmd="cargo run" dir="."<CR>
+  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zb <cmd>w<CR><cmd>TermExec cmd="cargo build" dir="."<CR>
+  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zc <cmd>w<CR><cmd>TermExec cmd="cargo check" dir="."<CR>
+  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zR <cmd>w<CR><cmd>RustRun<CR>
 augroup END
 
 " ----------
@@ -188,7 +190,8 @@ augroup END
 " --------------
 set clipboard=unnamed
 nnoremap Y gg^yG<End>
-nnoremap V gg^vG<End>
+" nnoremap V gg^vG<End>
+nnoremap <Leader>v gg^vG<End>
 noremap <Leader>d "1d
 " noremap <Leader>p "1p
 noremap x "-x

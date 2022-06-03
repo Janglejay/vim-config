@@ -84,15 +84,15 @@ nmap zb <Action>(Java.BuildMenu)
 " vnoremap gc <Action>(CommentByLineComment)
 map gC <Action>(CommentByBlockComment)
 " noremap gw <Action>(Git.CompareWithBranch)
-map <C-r> <Action>(Vcs.RollbackChangedLines)
+map <C-u> <Action>(Vcs.RollbackChangedLines)
 nmap ga <Action>(ShowIntentionActions)
 " nnoremap gc <Action>(GotoClass)
 
 nmap <Leader>c <Action>(CloseContent)
 nmap <Leader>C <Action>(CloseAllEditorsButActive)
 nmap <Leader>P <Action>(SelectIn)
-" nnoremap <Leader>p :NERDTree<CR>
-nmap <Leader>p :NERDTreeFind<CR>
+nnoremap <Leader>p :NERDTree<CR>
+" nmap <Leader>p :NERDTreeFind<CR>
 nmap <Leader>w <Action>(HideAllWindows)
 
 nmap zz <Action>(CollapseRegion)
@@ -110,3 +110,20 @@ nmap <Leader>e <Action>(RecentFiles)
 nmap <C-p> <Action>(ParameterInfo)
 imap <C-p> <Action>(ParameterInfo)
 nmap <Leader>s <Action>(FileStructurePopup)
+
+
+" Favorites
+nmap sf <Action>(ActivateFavoritesToolWindow)
+" AddAllToFavorites
+nmap mF <Action>(AddNewFavoritesList)
+nmap mf <Action>(AddToFavorites)
+" AddToFavoritesPopup
+" EditFavorites
+" FavoritesViewPopupMenu
+" SendToFavoritesGroup
+
+" Quick
+" QuickPreview
+nmap qt <Action>(QuickTypeDefinition)
+nmap qd <Action>(QuickJavaDoc)
+nmap qi <Action>(QuickImplementations)

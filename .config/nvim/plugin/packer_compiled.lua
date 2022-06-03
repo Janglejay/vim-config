@@ -234,6 +234,11 @@ _G.packer_plugins = {
     path = "/Users/fufangjie/.local/share/nvim/site/pack/packer/start/project.nvim",
     url = "https://github.com/ahmedkhalf/project.nvim"
   },
+  ["rust.vim"] = {
+    loaded = true,
+    path = "/Users/fufangjie/.local/share/nvim/site/pack/packer/start/rust.vim",
+    url = "https://github.com/rust-lang/rust.vim"
+  },
   ["telescope-live-grep-raw.nvim"] = {
     loaded = true,
     path = "/Users/fufangjie/.local/share/nvim/site/pack/packer/start/telescope-live-grep-raw.nvim",

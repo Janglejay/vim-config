@@ -39,8 +39,8 @@ local setup = {
     group = "+", -- symbol prepended to a group
   },
   popup_mappings = {
-    scroll_down = "<c-d>", -- binding to scroll down inside the popup
-    scroll_up = "<c-u>", -- binding to scroll up inside the popup
+    scroll_down = "<c-r>", -- binding to scroll down inside the popup
+    scroll_up = "<c-e>", -- binding to scroll up inside the popup
   },
   window = {
     border = "rounded", -- none, single, double, shadow
@@ -88,10 +88,10 @@ local mappings = {
   -- ["p"] = { "<cmd>NERDTreeToggle<CR>", "Explorer" },
   ["p"] = { "<cmd>NERDTreeFind<CR>", "Explorer" },
   -- ["p"] = { "<cmd>NERDTreeFocus<CR>", "Explorer" },
-  ["w"] = { "<cmd>w!<CR>", "Save" },
+  ["w"] = { "<cmd>w!<CR><cmd>NERDTreeClose<CR>", "Save" },
   ["q"] = { "<cmd>q!<CR>", "Quit" },
-  ["c"] = { "<cmd>Bdelete!<CR>", "Close Buffer" },
-  ["C"] = {"<cmd>%bd|e#|bd#<CR>", "Close other buffers"},
+  ["c"] = { "<cmd>w!<CR><cmd>Bdelete!<CR>", "Close Buffer" },
+  ["C"] = {"<cmd>w!<CR><cmd>%bd|e#|bd#<CR>", "Close other buffers"},
   ["n"] = { "<cmd>nohlsearch<CR>", "No Highlight" },
   ["f"] = {
     "<cmd>lua require('telescope.builtin').find_files(require('telescope.themes').get_dropdown{previewer = false})<cr>",
