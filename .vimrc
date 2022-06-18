@@ -23,8 +23,8 @@ set timeoutlen=500
 " ----------
  nnoremap U :redo<CR>
  " noremap <C-u> <C-d>
- noremap <C-r> <C-d>
- noremap <C-e> <C-u>
+ noremap <C-e> <C-d>
+ noremap <C-r> <C-u>
  " nnoremap <C-d> <C-e>
 "  nnoremap <CR> o<Esc>
  noremap <CR> ;
@@ -190,9 +190,9 @@ augroup END
 " --------------
 set clipboard=unnamed
 nnoremap Y gg^yG<End>
-" nnoremap V gg^vG<End>
+nnoremap V gg^vG<End>
 nnoremap <Leader>v gg^vG<End>
-noremap <Leader>d "1d
+noremap <Leader>d "_d
 " noremap <Leader>p "1p
 noremap x "-x
 noremap c "-c
@@ -201,8 +201,8 @@ nnoremap s "-s
 " vnoremap p "1dp
 " 防止每次都在后面粘贴，不符合习惯
 vnoremap p "_dP
-noremap <Leader>y "1y
-nnoremap <Leader>r viw"1dP
+noremap <Leader>y "_y
+nnoremap <Leader>r viw"_dP
 " noremap p "0p
 " noremap P "0P
 " noremap <Leader>p "*p

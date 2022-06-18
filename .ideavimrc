@@ -27,10 +27,13 @@ set easymotion
 noremap <S-CR> ,
 noremap <Leader>q :q!<CR>
 
+noremap <Leader>d "_d
 noremap ; $a;<ESC>
 noremap{ $a {<CR>
 " noremap <Leader>f ^f<SPACE>lciw;
 noremap <Leader>x ^f=2hciw
+noremap <Leader>y "_y
+nnoremap <Leader>r viw"_dP
 
 " Don't use Ex mode, use Q for formatting.
 " map Q gq
@@ -127,3 +130,27 @@ nmap mf <Action>(AddToFavorites)
 nmap qt <Action>(QuickTypeDefinition)
 nmap qd <Action>(QuickJavaDoc)
 nmap qi <Action>(QuickImplementations)
+
+" Split
+nmap sz <Action>(MaximizeEditorInSplit)
+
+nmap gl <Action>(NextSplitter)
+nmap gh <Action>(PrevSplitter)
+nmap sq <Action>(Unsplit)
+" ChangeSplitOrientation
+" Console.SplitLine                                  <M-CR>
+" EditorSplitLine                                    <M-CR>
+" OpenInRightSplit                                   <S-CR> button=1 clickCount=2 modifiers=512
+" ServiceView.SplitByType
+" jSplitHorizontally
+" SplitVertically
+" StretchSplitToBottom
+" StretchSplitToLeft
+" StretchSplitToRight
+" StretchSplitToTop
+" Terminal.NextSplitter                              <A-Tab>
+" Terminal.PrevSplitter                              <A-S-Tab>
+" TerminalSplitActionBase$Horizontal
+" TerminalSplitActionBase$Vertical
+" Unsplit
+" UnsplitAll
