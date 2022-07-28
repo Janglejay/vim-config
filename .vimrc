@@ -8,8 +8,6 @@ exec "nohlsearch"
 " autocmd BufWrite * :echom "Writing buffer!"
 let mapleader=","
 
-" noremap j gj 
-" noremap k gk
 nnoremap q <NOP>
 nnoremap \ q
 
@@ -53,7 +51,7 @@ noremap zc zz
 noremap zz zc
 noremap zZ zM
 noremap zO zR
-noremap vi> T>vt<
+" noremap vi> T>vt<
 " noremap ci> T>ct<
 " noremap T <Insert><Tab>
 

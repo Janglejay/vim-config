@@ -61,6 +61,7 @@ nmap R <Action>(NextTab)
 nmap E <Action>(PreviousTab)
 nmap gr <Action>(FindUsages)
 map <Leader>R  <Action>(RenameElement)
+map <Leader>T <Action>(ProjectViewPopupMenuRefactoringGroup)
 map gw <Action>(OpenProjectWindows)
 map gm <Action>(GotoNextBookmark)
 map gM <Action>(GotoPreviousBookmark)
@@ -74,6 +75,7 @@ nmap sp <Action>(PasteGroup)
 nmap st <Action>(ActivateTerminalToolWindow)
 nmap sd <Action>(ActivateDebugToolWindow)
 nmap sr <Action>(ActivateRunToolWindow)
+" ActivateHierarchyToolWindow
 nmap ss <Action>(ToolWindowsGroup)
 
 
@@ -154,3 +156,6 @@ nmap sq <Action>(Unsplit)
 " TerminalSplitActionBase$Vertical
 " Unsplit
 " UnsplitAll
+
+" "
+nmap gR <Action>(CallHierarchy)
