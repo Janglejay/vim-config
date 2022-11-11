@@ -9,6 +9,9 @@ source ~/.vim/plugin/vim-surround.vim
 " set incsearch
 " reference https://jungejason.github.io/ideavim/
 exec "nohlsearch"
+set ttimeoutlen=0
+set timeoutlen=500
+
 set idearefactormode=keep
 set NERDTree
 " set multiple-cursors
@@ -24,6 +27,9 @@ vnoremap p "_d"*P
 "noremap <Del
 set surround
 set easymotion
+"Plug 'easymotion/vim-easymotion'
+"map mf <Plug>(easymotion-bd-f)
+"nmap mj <Plug>(easymotion-overwin-f)
 noremap <S-CR> ,
 noremap <Leader>q :q!<CR>
 
@@ -34,6 +40,9 @@ noremap{ $a {<CR>
 noremap <Leader>x ^f=2hciw
 noremap <Leader>y "_y
 nnoremap <Leader>r viw"_dP
+inoremap jk <ESC>
+
+
 
 " Don't use Ex mode, use Q for formatting.
 " map Q gq
@@ -43,6 +52,7 @@ nnoremap <Leader>r viw"_dP
 
 "" Map <leader>d to start debug
 "map <leader>d <Action>(Debug)
+
 
 "" Map \b to toggle the breakpoint on the current line
 "map \b <Action>(ToggleLineBreakpoint)
@@ -77,6 +87,9 @@ nmap sd <Action>(ActivateDebugToolWindow)
 nmap sr <Action>(ActivateRunToolWindow)
 " ActivateHierarchyToolWindow
 nmap ss <Action>(ToolWindowsGroup)
+nmap J <Action>(MethodDown)
+nmap K <Action>(MethodUp)
+nmap sp <Action>(PasteMultiple)
 
 
 nmap zR <Action>(Run)
@@ -120,8 +133,8 @@ nmap <Leader>s <Action>(FileStructurePopup)
 " Favorites
 nmap sf <Action>(ActivateFavoritesToolWindow)
 " AddAllToFavorites
-nmap mF <Action>(AddNewFavoritesList)
-nmap mf <Action>(AddToFavorites)
+"nmap mF <Action>(AddNewFavoritesList)
+"nmap mf <Action>(AddToFavorites)
 " AddToFavoritesPopup
 " EditFavorites
 " FavoritesViewPopupMenu
@@ -159,3 +172,7 @@ nmap sq <Action>(Unsplit)
 
 " "
 nmap gR <Action>(CallHierarchy)
+
+nmap <C-o> <Action>(Back)
+nmap <C-n> <Action>(Forward)
+

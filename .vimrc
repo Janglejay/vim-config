@@ -28,13 +28,14 @@ set timeoutlen=500
  noremap <CR> ;
 " use in GUI
 " noremap <S-CR> ,
- noremap vv <S-v> 
+ noremap vv <S-v>
  inoremap jk <ESC>
 " inoremap <ESC> <NOP>
  vnoremap U ~
  vnoremap ~ <NOP>
 " vnoremap <ESC> <NOP>
  vnoremap u <ESC>
+ nnoremap go gi
  " cnoremap jk <ESC>
 " 这一段加上会使得命令模式中的上下键成为字符
 " cnoremap <ESC> <NOP>
@@ -188,7 +189,7 @@ augroup END
 " --------------
 set clipboard=unnamed
 nnoremap Y gg^yG<End>
-nnoremap V gg^vG<End>
+" nnoremap V gg^vG<End>
 nnoremap <Leader>v gg^vG<End>
 noremap <Leader>d "_d
 " noremap <Leader>p "1p
@@ -302,9 +303,17 @@ noremap gn %
 set cursorline
 set number
 set noshowmode
-" set relativenumber
+set relativenumber
 set scrolloff=5
 set nowrap
+
+
+nnoremap <Tab> >>
+" nnoremap <S-Tab> <<
+nnoremap <BS> <<
+vnoremap <Tab> >
+" vnoremap <S-Tab> < 
+vnoremap <BS> < 
 
 " ----------
 " Indent
@@ -318,12 +327,6 @@ set expandtab
 " set autoindent
 " set smartindent
 
-nnoremap <Tab> >>
-" nnoremap <S-Tab> <<
-nnoremap <BS> <<
-vnoremap <Tab> >
-" vnoremap <S-Tab> < 
-vnoremap <BS> < 
 
 " ----------
 " Filetype
