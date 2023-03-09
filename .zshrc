@@ -149,6 +149,10 @@ alias cll='cd /Users/fufangjie/Documents/Learn'
 alias tt='source $S/tran.sh zh'
 alias te='source $S/tran.sh en'
 
+# mysql command
+export MYSQL_HOME=/usr/local/mysql
+alias mysql=$MYSQL_HOME/bin/mysql
+
 
 # open command vim mode edit
 # website: http://bolyai.cs.elte.hu/zsh-manual/zsh_14.html

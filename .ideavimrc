@@ -14,6 +14,9 @@ set timeoutlen=500
 
 set idearefactormode=keep
 set NERDTree
+set easymotion
+map f <Plug>(easymotion-f)
+map F <Plug>(easymotion-F) 
 " set multiple-cursors
 let g:NERDTreeMapActivateNode='l'
 " let g:NERDTreeMapJumpParent='h'

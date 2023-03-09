@@ -74,6 +74,9 @@ noremap zO zR
 " Edit
 " ----------
 
+noremap { $a {<CR>}<ESC>O
+
+
 " ----------
 " Edit .vimrc
 " ----------
@@ -103,7 +106,7 @@ noremap zO zR
 augroup java_edit_group
     autocmd!
     autocmd BufNewFile,BufRead *.java noremap <silent><buffer> ; $a;<ESC>
-    autocmd BufNewFile,BufRead *.java noremap <silent><buffer>{ $a {<CR>}<ESC>O
+    " autocmd BufNewFile,BufRead *.java noremap <silent><buffer>{ $a {<CR>}<ESC>O
 augroup END
 
 " ----------
@@ -304,7 +307,7 @@ set cursorline
 set number
 set noshowmode
 set relativenumber
-set scrolloff=5
+set scrolloff=25
 set nowrap
 
 
