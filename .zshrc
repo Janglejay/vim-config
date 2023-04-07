@@ -4,6 +4,8 @@
 # Path to your oh-my-zsh installation.
 export ZSH="/Users/fufangjie/.oh-my-zsh"
 
+export JET_SHELL="/Users/fufangjie/Documents/jetbrains_shell"
+
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
@@ -89,7 +91,7 @@ source $ZSH/oh-my-zsh.sh
 # export MANPATH="/usr/local/man:$MANPATH"
 
 export V_S=/Users/fufangjie/Documents/Learn/vocational_skills
-export MAVEN_HOME=/opt/maven/apache-maven-3.8.1
+export MAVEN_HOME=/opt/maven/apache-maven-3.9.1
 export PATH=$PATH:$MAVEN_HOME/bin
 
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-8.jdk/Contents/Home
@@ -153,6 +155,9 @@ alias te='source $S/tran.sh en'
 export MYSQL_HOME=/usr/local/mysql
 alias mysql=$MYSQL_HOME/bin/mysql
 
+#jetbrain shell
+alias idea=$JET_SHELL/idea
+alias fleet=$JET_SHELL/fleet
 
 # open command vim mode edit
 # website: http://bolyai.cs.elte.hu/zsh-manual/zsh_14.html
@@ -185,3 +190,15 @@ alias mysql=$MYSQL_HOME/bin/mysql
 # preexec() {
 #    echo -ne '\e[5 q'
 # }
+
+# git config
+alias gcm='source $S/commit_code.sh'
+alias gc='git checkout'
+alias gs="git status"
+
+# anaconda
+export PATH="/opt/homebrew/anaconda3/bin:$PATH"
+
+# system
+alias pc='pbcopy'
+alias pp='pbpaste'
