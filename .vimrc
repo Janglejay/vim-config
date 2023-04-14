@@ -176,7 +176,7 @@ augroup markdown_edit_group
 
 augroup END
 
-nnoremap <silent><buffer> <Leader>o /<++><CR>:nohl<CR>4"-cl
+nnoremap <silent><buffer> <Leader>x /<++><CR>:nohl<CR>4"-cl
 " ----------
 " Edit lua
 " ----------

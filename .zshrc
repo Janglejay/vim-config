@@ -192,7 +192,8 @@ alias fleet=$JET_SHELL/fleet
 # }
 
 # git config
-alias gcm='source $S/commit_code.sh'
+alias gcm='source $S/commit.sh'
+alias gcm='source $S/commit.sh real_commit'
 alias gc='git checkout'
 alias gs="git status"
 
