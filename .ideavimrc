@@ -16,7 +16,13 @@ set idearefactormode=keep
 set NERDTree
 set easymotion
 map f <Plug>(easymotion-f)
-map F <Plug>(easymotion-F) 
+map F <Plug>(easymotion-F)
+
+map <expr> <CR> Easymotion('w', 1, '', '')
+map <expr> <C-u><CR> Easymotion('w', -1, '', '')
+" 如果你使用的leader key是逗号，可以按以下方式绑定:
+" map <leader><leader> <Plug>(easymotion-prefix)
+
 " set multiple-cursors
 let g:NERDTreeMapActivateNode='l'
 " let g:NERDTreeMapJumpParent='h'
@@ -134,7 +140,7 @@ nmap <Leader>s <Action>(FileStructurePopup)
 
 
 " Favorites
-nmap sf <Action>(ActivateFavoritesToolWindow)
+" nmap sf <Action>(ActivateFavoritesToolWindow)
 " AddAllToFavorites
 "nmap mF <Action>(AddNewFavoritesList)
 "nmap mf <Action>(AddToFavorites)

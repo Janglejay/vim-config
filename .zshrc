@@ -202,3 +202,6 @@ export PATH="/opt/homebrew/anaconda3/bin:$PATH"
 # system
 alias pc='pbcopy'
 alias pp='pbpaste'
+
+# tree
+alias tl='tree -L'

@@ -103,11 +103,13 @@ noremap { $a {<CR>}<ESC>O
 " ----------
 " Edit Java
 " ----------
-augroup java_edit_group
-    autocmd!
-    autocmd BufNewFile,BufRead *.java noremap <silent><buffer> ; $a;<ESC>
-    " autocmd BufNewFile,BufRead *.java noremap <silent><buffer>{ $a {<CR>}<ESC>O
-augroup END
+" augroup java_edit_group
+"     autocmd!
+"     autocmd BufNewFile,BufRead *.java noremap <silent><buffer> ; $a;<ESC>
+"     autocmd BufNewFile,BufRead *.java noremap <silent><buffer>{ $a {<CR>}<ESC>O
+" augroup END
+noremap <silent><buffer> ; $a;<ESC>
+noremap <silent><buffer>{ $a {<CR>}<ESC>O
 
 " ----------
 " Edit Rust
@@ -174,6 +176,7 @@ augroup markdown_edit_group
 
 augroup END
 
+nnoremap <silent><buffer> <Leader>o /<++><CR>:nohl<CR>4"-cl
 " ----------
 " Edit lua
 " ----------
