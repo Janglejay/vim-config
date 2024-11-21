@@ -14,12 +14,12 @@ set timeoutlen=500
 
 set idearefactormode=keep
 set NERDTree
-set easymotion
-map f <Plug>(easymotion-f)
-map F <Plug>(easymotion-F)
+" set easymotion
+" map f <Plug>(easymotion-f)
+" map F <Plug>(easymotion-F)
 
-map <expr> <CR> Easymotion('w', 1, '', '')
-map <expr> <C-u><CR> Easymotion('w', -1, '', '')
+" map <expr> <CR> Easymotion('w', 1, '', '')
+" map <expr> <C-u><CR> Easymotion('w', -1, '', '')
 " 如果你使用的leader key是逗号，可以按以下方式绑定:
 " map <leader><leader> <Plug>(easymotion-prefix)
 
@@ -35,7 +35,7 @@ noremap p "*p
 vnoremap p "_d"*P
 "noremap <Del
 set surround
-set easymotion
+" set easymotion
 "Plug 'easymotion/vim-easymotion'
 "map mf <Plug>(easymotion-bd-f)
 "nmap mj <Plug>(easymotion-overwin-f)
@@ -44,7 +44,7 @@ noremap <Leader>q :q!<CR>
 
 noremap <Leader>d "_d
 noremap ; $a;<ESC>
-noremap{ $a {<CR>
+noremap{ $a {<CR>}<ESC>O
 " noremap <Leader>f ^f<SPACE>lciw;
 noremap <Leader>x ^f=2hciw
 noremap <Leader>y "_y

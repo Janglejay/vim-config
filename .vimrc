@@ -310,7 +310,7 @@ set cursorline
 set number
 set noshowmode
 set relativenumber
-set scrolloff=25
+" set scrolloff=25
 set nowrap
 
 

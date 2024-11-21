@@ -4,7 +4,7 @@
 # Path to your oh-my-zsh installation.
 export ZSH="/Users/fufangjie/.oh-my-zsh"
 
-export JET_SHELL="/Users/fufangjie/Documents/jetbrains_shell"
+export JET_SHELL="/Users/fufangjie/Documents/Shell/jetbrains_shell"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -206,3 +206,7 @@ alias pp='pbpaste'
 
 # tree
 alias tl='tree -L'
+
+# z command
+source /opt/homebrew/Cellar/z/1.9/etc/profile.d/z.sh 
+alias zl='z -l'
