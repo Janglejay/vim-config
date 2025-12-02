@@ -114,81 +114,81 @@ noremap <silent><buffer>{ $a {<CR>}<ESC>O
 " ----------
 " Edit Rust
 " ----------
-augroup rust_edit_group
-  autocmd!
-  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer> ; $a;<ESC>
-  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>{ $a {<CR>}<ESC>O
-  " autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zr :RustRun<CR>
-  " autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zR :!cargo run<CR>
-  " autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zr <cmd>lua _RUST_TOGGLE()<CR>
-  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zr <cmd>w<CR><cmd>TermExec cmd="cargo run" dir="."<CR>
-  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zb <cmd>w<CR><cmd>TermExec cmd="cargo build" dir="."<CR>
-  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zc <cmd>w<CR><cmd>TermExec cmd="cargo check" dir="."<CR>
-  autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zR <cmd>w<CR><cmd>RustRun<CR>
-augroup END
+" augroup rust_edit_group
+"   autocmd!
+"   autocmd BufNewFile,BufRead *.rs noremap <silent><buffer> ; $a;<ESC>
+"   autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>{ $a {<CR>}<ESC>O
+"   " autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zr :RustRun<CR>
+"   " autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zR :!cargo run<CR>
+"   " autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zr <cmd>lua _RUST_TOGGLE()<CR>
+"   autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zr <cmd>w<CR><cmd>TermExec cmd="cargo run" dir="."<CR>
+"   autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zb <cmd>w<CR><cmd>TermExec cmd="cargo build" dir="."<CR>
+"   autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zc <cmd>w<CR><cmd>TermExec cmd="cargo check" dir="."<CR>
+"   autocmd BufNewFile,BufRead *.rs noremap <silent><buffer>zR <cmd>w<CR><cmd>RustRun<CR>
+" augroup END
 
 " ----------
 " Edit go
 " ----------
-augroup go_edit_group
-    autocmd!
-    autocmd BufNewFile,BufRead *.go noremap <silent><buffer> ; $a;<ESC>
-    autocmd BufNewFile,BufRead *.go noremap <silent><buffer>{ $a {<CR>}<ESC>O
-    autocmd BufNewFile,BufRead *.go noremap <silent><buffer>zr <cmd>TermExec cmd="go run main.go" dir="."<CR>
-    " autocmd BufNewFile,BufRead *.go nnoremap <silent><buffer> zr :!go run %:p<CR>
-augroup END
-
+" augroup go_edit_group
+"     autocmd!
+"     autocmd BufNewFile,BufRead *.go noremap <silent><buffer> ; $a;<ESC>
+"     autocmd BufNewFile,BufRead *.go noremap <silent><buffer>{ $a {<CR>}<ESC>O
+"     autocmd BufNewFile,BufRead *.go noremap <silent><buffer>zr <cmd>TermExec cmd="go run main.go" dir="."<CR>
+"     " autocmd BufNewFile,BufRead *.go nnoremap <silent><buffer> zr :!go run %:p<CR>
+" augroup END
+"
 " ----------
 " Edit markdown
 " ----------
-augroup markdown_edit_group
-    autocmd!
-    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>f /<++><CR>:nohl<CR>4"-cl
-    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>` <Insert>```<CR><++><CR>```<ESC>
-    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>b <Insert>**<++>**<ESC>
-    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>s <Insert>~~<++>~~<ESC>
-    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>o <Insert>[<++>](<++>)<ESC>
-    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>p <Insert>![<++>](<++>)<ESC>
-    " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>m <Insert>- [<++>]<ESC>
-                                                     
-    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>x <ESC>/<++><CR>:nohl<CR>4"-cl
-    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>c ```<CR><++><CR>```
-    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>b **<++>**
-    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>s ~~<++>~~
-    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>l [<++>](<++>)
-    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>p ![<++>](<++>)
-    " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>m - [ ]
-
-    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>x /<++><CR>:nohl<CR>4"-cl
-    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>C i```<CR><++><CR>```<ESC>
-    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>c i`<++>`<ESC>
-    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>b i**<++>**<ESC>
-    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>s i~~<++>~~<ESC>
-    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>o i[<++>](<++>)<ESC>
-    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>O i![<++>](<++>)<ESC>
-    autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>m i- [ ]<ESC>
-
-    " autocmd BufNewFile,BufRead *.md vmap <silent><buffer> <Leader>c <Leader>d<Insert>```<CR>```<CR><ESC>kO<ESC><Leader>p<ESC>
-    " autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>s d<Insert>~~~~<ESC>2hp
-    " autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>b d<Insert>****<ESC>2hp
-    " autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>l d<Insert>[<++>]()<ESC>hp
-    " autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>p d<Insert>![<++>]()<ESC>hp
-
-augroup END
-
+" augroup markdown_edit_group
+"     autocmd!
+"     " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>f /<++><CR>:nohl<CR>4"-cl
+"     " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>` <Insert>```<CR><++><CR>```<ESC>
+"     " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>b <Insert>**<++>**<ESC>
+"     " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>s <Insert>~~<++>~~<ESC>
+"     " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>o <Insert>[<++>](<++>)<ESC>
+"     " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>p <Insert>![<++>](<++>)<ESC>
+"     " autocmd BufNewFile,BufRead *.md noremap <silent><buffer> <Leader>m <Insert>- [<++>]<ESC>
+"                                                      
+"     " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>x <ESC>/<++><CR>:nohl<CR>4"-cl
+"     " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>c ```<CR><++><CR>```
+"     " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>b **<++>**
+"     " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>s ~~<++>~~
+"     " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>l [<++>](<++>)
+"     " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>p ![<++>](<++>)
+"     " autocmd BufNewFile,BufRead *.md inoremap <silent><buffer> <Leader>m - [ ]
+"
+"     autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>x /<++><CR>:nohl<CR>4"-cl
+"     autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>C i```<CR><++><CR>```<ESC>
+"     autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>c i`<++>`<ESC>
+"     autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>b i**<++>**<ESC>
+"     autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>s i~~<++>~~<ESC>
+"     autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>o i[<++>](<++>)<ESC>
+"     autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>O i![<++>](<++>)<ESC>
+"     autocmd BufNewFile,BufRead *.md nnoremap <silent><buffer> <Leader>m i- [ ]<ESC>
+"
+"     " autocmd BufNewFile,BufRead *.md vmap <silent><buffer> <Leader>c <Leader>d<Insert>```<CR>```<CR><ESC>kO<ESC><Leader>p<ESC>
+"     " autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>s d<Insert>~~~~<ESC>2hp
+"     " autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>b d<Insert>****<ESC>2hp
+"     " autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>l d<Insert>[<++>]()<ESC>hp
+"     " autocmd BufNewFile,BufRead *.md vnoremap <silent><buffer> <Leader>p d<Insert>![<++>]()<ESC>hp
+"
+" augroup END
+"
 nnoremap <silent><buffer> <Leader>x /<++><CR>:nohl<CR>4"-cl
 " ----------
 " Edit lua
 " ----------
-augroup lua_edit_group
-    autocmd!
-    " autocmd BufNewFile,BufRead *.lua nnoremap <silent><buffer> <Leader>r :!/opt/homebrew/bin/lua %:p<CR>
-    " autocmd BufNewFile,BufRead *.lua vnoremap <silent><buffer> <Leader>r <ESC>:!/opt/homebrew/bin/lua %:p<CR>
-    autocmd BufNewFile,BufRead *.lua nnoremap <silent><buffer> zr :!/opt/homebrew/bin/lua %:p<CR>
-    " autocmd BufNewFile,BufRead *.lua vnoremap <silent><buffer> zr <ESC>:!/opt/homebrew/bin/lua %:p<CR>
-    autocmd BufNewFile,BufRead *.lua noremap <silent><buffer> ; $a;<ESC>
-    autocmd BufNewFile,BufRead *.lua noremap <silent><buffer>{ $a {<CR>}<ESC>O
-augroup END
+" augroup lua_edit_group
+"     autocmd!
+"     " autocmd BufNewFile,BufRead *.lua nnoremap <silent><buffer> <Leader>r :!/opt/homebrew/bin/lua %:p<CR>
+"     " autocmd BufNewFile,BufRead *.lua vnoremap <silent><buffer> <Leader>r <ESC>:!/opt/homebrew/bin/lua %:p<CR>
+"     autocmd BufNewFile,BufRead *.lua nnoremap <silent><buffer> zr :!/opt/homebrew/bin/lua %:p<CR>
+"     " autocmd BufNewFile,BufRead *.lua vnoremap <silent><buffer> zr <ESC>:!/opt/homebrew/bin/lua %:p<CR>
+"     autocmd BufNewFile,BufRead *.lua noremap <silent><buffer> ; $a;<ESC>
+"     autocmd BufNewFile,BufRead *.lua noremap <silent><buffer>{ $a {<CR>}<ESC>O
+" augroup END
 
 " --------------
 " Copy and paste or replace
