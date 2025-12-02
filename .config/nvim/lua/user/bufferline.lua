@@ -73,7 +73,8 @@ bufferline.setup {
   },
   highlights = {
     fill = {
-      guifg = { attribute = "fg", highlight = "#ff0000" },
+      -- Use an existing highlight group to avoid invalid names (e.g. "#ff0000" is not a valid group)
+      guifg = { attribute = "fg", highlight = "TabLine" },
       guibg = { attribute = "bg", highlight = "TabLine" },
     },
     background = {
