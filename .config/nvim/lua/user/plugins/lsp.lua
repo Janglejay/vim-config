@@ -11,7 +11,11 @@ return {
     dependencies = "williamboman/mason.nvim",
     config = function()
       require("mason-lspconfig").setup({ ensure_installed = { "pyright" }, automatic_installation = true })
+      local mason_bin = vim.fn.stdpath("data") .. "/mason/bin"
       vim.lsp.config("pyright", {
+        cmd = { mason_bin .. "/pyright-langserver", "--stdio" },
+        filetypes = { "python" },
+        root_markers = { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", ".git" },
         settings = { python = { analysis = { autoSearchPaths = true, diagnosticMode = "openFilesOnly", typeCheckingMode = "basic" } } },
       })
       vim.lsp.enable("pyright")

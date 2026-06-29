@@ -18,6 +18,7 @@ lazy.setup(require("user.plugins"), {
   install = { colorscheme = { "gruvbox", "habamax" } },
   ui = { border = "rounded" },
   performance = {
+    reset_packpath = true,  -- 确保 packpath 正确重置
     rtp = {
       disabled_plugins = {
         "gzip", "matchit", "matchparen", "netrwPlugin",
@@ -26,3 +27,9 @@ lazy.setup(require("user.plugins"), {
     },
   },
 })
+
+-- Neovim 0.10+ native loader 缓存重置
+-- 让新加入 runtimepath 的插件模块可以被正确找到
+if vim.loader then
+  vim.loader.reset()
+end
