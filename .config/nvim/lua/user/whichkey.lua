@@ -3,189 +3,81 @@ if not status_ok then
   return
 end
 
-local setup = {
+which_key.setup({
   plugins = {
     marks = true,
     registers = true,
-    spelling = {
-      enabled = true,
-      suggestions = 20,
-    },
+    spelling = { enabled = true, suggestions = 20 },
     presets = {
-      operators = false,
-      motions = true,
-      text_objects = true,
-      windows = true,
-      nav = true,
-      z = true,
-      g = true,
+      operators = false, motions = true, text_objects = true,
+      windows = true, nav = true, z = true, g = true,
     },
   },
-  icons = {
-    breadcrumb = "»",
-    separator = "➜",
-    group = "+",
-  },
-  win = {
-    border = "rounded",
-  },
+  icons = { breadcrumb = "»", separator = "➜", group = "+" },
+  win  = { border = "rounded" },
   layout = {
     height = { min = 4, max = 25 },
-    width = { min = 20, max = 50 },
-    spacing = 3,
-    align = "left",
+    width  = { min = 20, max = 50 },
+    spacing = 3, align = "left",
   },
   show_help = true,
-}
+})
 
-which_key.setup(setup)
+which_key.add({
+  -- 基础操作
+  { "<leader>a", "<cmd>Alpha<cr>",                          desc = "Alpha 起始页" },
+  { "<leader>b", "<cmd>lua require('fzf-lua').buffers()<cr>", desc = "Buffers 列表" },
+  { "<leader>e", "<cmd>NvimTreeToggle<CR>",                 desc = "文件树 (Explorer)" },
+  { "<leader>p", "<cmd>NvimTreeFindFile<CR>",               desc = "定位当前文件" },
+  { "<leader>P", "<cmd>NvimTreeFindFile<CR>",               desc = "SelectIn (定位当前文件)" },
+  { "<leader>w", "<cmd>only<CR>",                           desc = "关闭其他窗口 (HideAllWindows)" },
+  { "<leader>q", "<cmd>q!<CR>",                             desc = "Quit" },
+  { "<leader>c", "<cmd>Bdelete<CR>",                        desc = "关闭当前 Buffer" },
+  { "<leader>C", "<cmd>%bd|e#|bd#<CR>",                    desc = "关闭其他所有 Buffer" },
+  { "<leader>n", "<cmd>nohlsearch<CR>",                     desc = "取消搜索高亮" },
 
--- Try new API (v3.x) first, fallback to old API (v2.x)
-local ok, _ = pcall(function()
-  -- New which-key v3.x API
-  which_key.add({
-    { "<leader>a", "<cmd>Alpha<cr>", desc = "Alpha" },
-    { "<leader>b", "<cmd>lua require('telescope.builtin').buffers(require('telescope.themes').get_dropdown{previewer = false})<cr>", desc = "Buffers" },
-    { "<leader>e", "<cmd>NvimTreeToggle<CR>", desc = "Explorer" },
-    { "<leader>p", "<cmd>NvimTreeFindFile<CR>", desc = "Find File in Tree" },
-    { "<leader>w", "<cmd>w!<CR><cmd>NvimTreeClose<CR>", desc = "Save" },
-    { "<leader>q", "<cmd>q!<CR>", desc = "Quit" },
-    { "<leader>c", "<cmd>w!<CR><cmd>Bdelete!<CR>", desc = "Close Buffer" },
-    { "<leader>C", "<cmd>w!<CR><cmd>%bd|e#|bd#<CR>", desc = "Close other buffers" },
-    { "<leader>n", "<cmd>nohlsearch<CR>", desc = "No Highlight" },
-    { "<leader>f", "<cmd>lua require('telescope.builtin').find_files(require('telescope.themes').get_dropdown{previewer = false})<cr>", desc = "Find files" },
-    { "<leader>F", "<cmd>Telescope live_grep<CR>", desc = "Find Text" },
-    { "<leader>e", "<cmd>lua require('telescope').extensions.projects.projects()<cr>", desc = "Projects" },
-    
-    { "<leader>g", group = "Git" },
-    { "<leader>gl", "<cmd>lua require 'gitsigns'.blame_line()<cr>", desc = "Blame" },
-    { "<leader>gR", "<cmd>lua require 'gitsigns'.reset_buffer()<cr>", desc = "Reset Buffer" },
-    { "<leader>gs", "<cmd>lua require 'gitsigns'.stage_hunk()<cr>", desc = "Stage Hunk" },
-    { "<leader>gu", "<cmd>lua require 'gitsigns'.undo_stage_hunk()<cr>", desc = "Undo Stage Hunk" },
-    { "<leader>go", "<cmd>Telescope git_status<cr>", desc = "Open changed file" },
-    { "<leader>gb", "<cmd>Telescope git_branches<cr>", desc = "Checkout branch" },
-    { "<leader>gc", "<cmd>Telescope git_commits<cr>", desc = "Checkout commit" },
-    { "<leader>gd", "<cmd>Gitsigns diffthis HEAD<cr>", desc = "Diff" },
-    
-    { "<leader>l", group = "LSP" },
-    { "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<cr>", desc = "Code Action" },
-    { "<leader>ld", "<cmd>Telescope lsp_document_diagnostics<cr>", desc = "Document Diagnostics" },
-    { "<leader>lw", "<cmd>Telescope lsp_workspace_diagnostics<cr>", desc = "Workspace Diagnostics" },
-    { "<leader>lf", "<cmd>lua vim.lsp.buf.format({ async = true })<cr>", desc = "Format" },
-    { "<leader>li", "<cmd>LspInfo<cr>", desc = "Info" },
-    { "<leader>lI", "<cmd>LspInstallInfo<cr>", desc = "Installer Info" },
-    { "<leader>lj", "<cmd>lua vim.lsp.diagnostic.goto_next()<CR>", desc = "Next Diagnostic" },
-    { "<leader>lk", "<cmd>lua vim.lsp.diagnostic.goto_prev()<cr>", desc = "Prev Diagnostic" },
-    { "<leader>ll", "<cmd>lua vim.lsp.codelens.run()<cr>", desc = "CodeLens Action" },
-    { "<leader>lq", "<cmd>lua vim.lsp.diagnostic.set_loclist()<cr>", desc = "Quickfix" },
-    { "<leader>lr", "<cmd>lua vim.lsp.buf.rename()<cr>", desc = "Rename" },
-    { "<leader>ls", "<cmd>Telescope lsp_document_symbols<cr>", desc = "Document Symbols" },
-    { "<leader>lS", "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>", desc = "Workspace Symbols" },
-    
-    { "<leader>S", group = "Search" },
-    { "<leader>Sb", "<cmd>Telescope git_branches<cr>", desc = "Checkout branch" },
-    { "<leader>Sc", "<cmd>Telescope colorscheme<cr>", desc = "Colorscheme" },
-    { "<leader>Sh", "<cmd>Telescope help_tags<cr>", desc = "Find Help" },
-    { "<leader>SM", "<cmd>Telescope man_pages<cr>", desc = "Man Pages" },
-    { "<leader>Sr", "<cmd>Telescope oldfiles<cr>", desc = "Open Recent File" },
-    { "<leader>SR", "<cmd>Telescope registers<cr>", desc = "Registers" },
-    { "<leader>Sk", "<cmd>Telescope keymaps<cr>", desc = "Keymaps" },
-    { "<leader>SC", "<cmd>Telescope commands<cr>", desc = "Commands" },
-  })
-end)
+  -- 搜索（fzf-lua，对应 IdeaVim）
+  { "<leader>f", "<cmd>lua require('fzf-lua').files()<cr>",           desc = "SearchEverywhere (文件)" },
+  { "<leader>F", "<cmd>lua require('fzf-lua').live_grep()<cr>",       desc = "FindInPath (全局搜索)" },
+  { "<leader>e", "<cmd>lua require('fzf-lua').oldfiles()<cr>",        desc = "RecentFiles (最近文件)" },
+  { "<leader>s", "<cmd>AerialToggle!<CR>",                            desc = "FileStructurePopup (代码大纲)" },
+  { "<leader>h",  group = "HTTP/Spring" },
+  { "<leader>ha", desc = "Spring 接口搜索 (Cool Request)" },
 
-if not ok then
-  -- Fallback to old which-key v2.x API
-  local opts = {
-    mode = "n",
-    prefix = "<leader>",
-    buffer = nil,
-    silent = true,
-    noremap = true,
-    nowait = true,
-  }
+  -- Git
+  { "<leader>g",  group = "Git" },
+  { "<leader>gl", "<cmd>lua require 'gitsigns'.blame_line()<cr>",      desc = "Blame" },
+  { "<leader>gR", "<cmd>lua require 'gitsigns'.reset_buffer()<cr>",    desc = "Reset Buffer" },
+  { "<leader>gs", "<cmd>lua require 'gitsigns'.stage_hunk()<cr>",      desc = "Stage Hunk" },
+  { "<leader>gu", "<cmd>lua require 'gitsigns'.undo_stage_hunk()<cr>", desc = "Undo Stage Hunk" },
+  { "<leader>go", "<cmd>lua require('fzf-lua').git_status()<cr>",      desc = "Git Status" },
+  { "<leader>gb", "<cmd>lua require('fzf-lua').git_branches()<cr>",    desc = "Git Branches" },
+  { "<leader>gc", "<cmd>lua require('fzf-lua').git_commits()<cr>",     desc = "Git Commits" },
+  { "<leader>gd", "<cmd>Gitsigns diffthis HEAD<cr>",                   desc = "Diff HEAD" },
 
-  local mappings = {
-    ["a"] = { "<cmd>Alpha<cr>", "Alpha" },
-    ["b"] = {
-      "<cmd>lua require('telescope.builtin').buffers(require('telescope.themes').get_dropdown{previewer = false})<cr>",
-      "Buffers",
-    },
-    ["e"] = { "<cmd>NvimTreeToggle<CR>", "Explorer" },
-    ["p"] = { "<cmd>NvimTreeFindFile<CR>", "Find File in Tree" },
-    ["w"] = { "<cmd>w!<CR><cmd>NvimTreeClose<CR>", "Save" },
-    ["q"] = { "<cmd>q!<CR>", "Quit" },
-    ["c"] = { "<cmd>w!<CR><cmd>Bdelete!<CR>", "Close Buffer" },
-    ["C"] = {"<cmd>w!<CR><cmd>%bd|e#|bd#<CR>", "Close other buffers"},
-    ["n"] = { "<cmd>nohlsearch<CR>", "No Highlight" },
-    ["f"] = {
-      "<cmd>lua require('telescope.builtin').find_files(require('telescope.themes').get_dropdown{previewer = false})<cr>",
-      "Find files",
-    },
-    ["F"] = { "<cmd>Telescope live_grep<CR>", "Find Text" },
-    ["e"] = { "<cmd>lua require('telescope').extensions.projects.projects()<cr>", "Projects" },
+  -- LSP
+  { "<leader>l",  group = "LSP" },
+  { "<leader>la", "<cmd>lua vim.lsp.buf.code_action()<cr>",                         desc = "Code Action" },
+  { "<leader>ld", "<cmd>lua require('fzf-lua').diagnostics_document()<cr>",         desc = "Document Diagnostics" },
+  { "<leader>lw", "<cmd>lua require('fzf-lua').diagnostics_workspace()<cr>",        desc = "Workspace Diagnostics" },
+  { "<leader>lf", "<cmd>lua vim.lsp.buf.format({ async = true })<cr>",              desc = "Format" },
+  { "<leader>li", "<cmd>LspInfo<cr>",                                               desc = "LSP Info" },
+  { "<leader>lj", "<cmd>lua vim.diagnostic.goto_next()<CR>",                        desc = "Next Diagnostic" },
+  { "<leader>lk", "<cmd>lua vim.diagnostic.goto_prev()<cr>",                        desc = "Prev Diagnostic" },
+  { "<leader>ll", "<cmd>lua vim.lsp.codelens.run()<cr>",                            desc = "CodeLens Action" },
+  { "<leader>lq", "<cmd>lua vim.diagnostic.setloclist()<cr>",                       desc = "Quickfix" },
+  { "<leader>lr", "<cmd>lua vim.lsp.buf.rename()<cr>",                              desc = "Rename" },
+  { "<leader>ls", "<cmd>lua require('fzf-lua').lsp_document_symbols()<cr>",         desc = "Document Symbols" },
+  { "<leader>lS", "<cmd>lua require('fzf-lua').lsp_live_workspace_symbols()<cr>",   desc = "Workspace Symbols" },
 
-    g = {
-      name = "Git",
-      l = { "<cmd>lua require 'gitsigns'.blame_line()<cr>", "Blame" },
-      R = { "<cmd>lua require 'gitsigns'.reset_buffer()<cr>", "Reset Buffer" },
-      s = { "<cmd>lua require 'gitsigns'.stage_hunk()<cr>", "Stage Hunk" },
-      u = {
-        "<cmd>lua require 'gitsigns'.undo_stage_hunk()<cr>",
-        "Undo Stage Hunk",
-      },
-      o = { "<cmd>Telescope git_status<cr>", "Open changed file" },
-      b = { "<cmd>Telescope git_branches<cr>", "Checkout branch" },
-      c = { "<cmd>Telescope git_commits<cr>", "Checkout commit" },
-      d = {
-        "<cmd>Gitsigns diffthis HEAD<cr>",
-        "Diff",
-      },
-    },
-
-    l = {
-      name = "LSP",
-      a = { "<cmd>lua vim.lsp.buf.code_action()<cr>", "Code Action" },
-      d = {
-        "<cmd>Telescope lsp_document_diagnostics<cr>",
-        "Document Diagnostics",
-      },
-      w = {
-        "<cmd>Telescope lsp_workspace_diagnostics<cr>",
-        "Workspace Diagnostics",
-      },
-      f = { "<cmd>lua vim.lsp.buf.format({ async = true })<cr>", "Format" },
-      i = { "<cmd>LspInfo<cr>", "Info" },
-      I = { "<cmd>LspInstallInfo<cr>", "Installer Info" },
-      j = {
-        "<cmd>lua vim.lsp.diagnostic.goto_next()<CR>",
-        "Next Diagnostic",
-      },
-      k = {
-        "<cmd>lua vim.lsp.diagnostic.goto_prev()<cr>",
-        "Prev Diagnostic",
-      },
-      l = { "<cmd>lua vim.lsp.codelens.run()<cr>", "CodeLens Action" },
-      q = { "<cmd>lua vim.lsp.diagnostic.set_loclist()<cr>", "Quickfix" },
-      r = { "<cmd>lua vim.lsp.buf.rename()<cr>", "Rename" },
-      s = { "<cmd>Telescope lsp_document_symbols<cr>", "Document Symbols" },
-      S = {
-        "<cmd>Telescope lsp_dynamic_workspace_symbols<cr>",
-        "Workspace Symbols",
-      },
-    },
-    S = {
-      name = "Search",
-      b = { "<cmd>Telescope git_branches<cr>", "Checkout branch" },
-      c = { "<cmd>Telescope colorscheme<cr>", "Colorscheme" },
-      h = { "<cmd>Telescope help_tags<cr>", "Find Help" },
-      M = { "<cmd>Telescope man_pages<cr>", "Man Pages" },
-      r = { "<cmd>Telescope oldfiles<cr>", "Open Recent File" },
-      R = { "<cmd>Telescope registers<cr>", "Registers" },
-      k = { "<cmd>Telescope keymaps<cr>", "Keymaps" },
-      C = { "<cmd>Telescope commands<cr>", "Commands" },
-    },
-  }
-
-  which_key.register(mappings, opts)
-end
+  -- 搜索杂项
+  { "<leader>S",  group = "Search" },
+  { "<leader>Sb", "<cmd>lua require('fzf-lua').git_branches()<cr>",  desc = "Git Branches" },
+  { "<leader>Sc", "<cmd>lua require('fzf-lua').colorschemes()<cr>",  desc = "Colorscheme" },
+  { "<leader>Sh", "<cmd>lua require('fzf-lua').help_tags()<cr>",     desc = "Help Tags" },
+  { "<leader>SM", "<cmd>lua require('fzf-lua').man_pages()<cr>",     desc = "Man Pages" },
+  { "<leader>Sr", "<cmd>lua require('fzf-lua').oldfiles()<cr>",      desc = "Recent Files" },
+  { "<leader>SR", "<cmd>lua require('fzf-lua').registers()<cr>",     desc = "Registers" },
+  { "<leader>Sk", "<cmd>lua require('fzf-lua').keymaps()<cr>",       desc = "Keymaps" },
+  { "<leader>SC", "<cmd>lua require('fzf-lua').commands()<cr>",      desc = "Commands" },
+})

@@ -38,7 +38,7 @@ read_only_style = "red"
 [git_branch]
 symbol = " "
 format = "on [$symbol$branch(:$remote_branch)]($style) "
-truncation_length = 20
+truncation_length = 50
 truncation_symbol = "…"
 style = "purple bold"
 
