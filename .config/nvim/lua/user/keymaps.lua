@@ -26,8 +26,8 @@ keymap("n", "vv", "<S-v>", opts)          -- vv 选中整行
 keymap("n", "go", "gi", opts)             -- go 跳到上次插入位置并进入插入模式
 
 -- 翻页 (以空行为段落)
-keymap("n", "J", "}", opts)               -- J 跳到下一段
-keymap("n", "K", "{", opts)                -- K 跳到上一段
+-- keymap("n", "J", "}", opts)  -- 已替换为 treesitter method jump (editing.lua)
+-- keymap("n", "K", "{", opts)  -- 已替换为 treesitter method jump (editing.lua)
 
 -- Leader 快捷键
 keymap("n", "<Leader>j", "*", opts)        -- 搜索当前词
@@ -94,10 +94,9 @@ keymap("n", "<C-f>", "<cmd>lua require 'gitsigns'.prev_hunk()<cr>", opts)
 keymap("n", "<C-d>", "<cmd>lua require 'gitsigns'.next_hunk()<cr>", opts)
 
 -- ====================
--- Telescope / Bookmarks
+-- 跳转历史
 -- ====================
-keymap("n", "ma", "<cmd>Telescope vim_bookmarks all<cr>", opts)
-keymap("n", "<C-n>", "<C-i>", opts)
+keymap("n", "<C-n>", "<C-i>", opts)  -- Forward（对应 IdeaVim <C-n> Forward）
 
 -- ====================
 -- Terminal
@@ -120,6 +119,37 @@ keymap("i", "jk", "<ESC>", opts)          -- jk 退出插入模式
 keymap("v", "U", "~", opts)                -- U 大写
 keymap("v", "~", "<Nop>", opts)
 keymap("v", "u", "<ESC>", opts)            -- u 小写
+
+-- ====================
+-- LSP 快速查看（对照 IdeaVim）
+-- ====================
+keymap("n", "qt", "<cmd>lua vim.lsp.buf.type_definition()<CR>", opts)   -- QuickTypeDefinition
+keymap("n", "qd", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)              -- QuickJavaDoc
+
+-- ====================
+-- 窗口操作（对照 IdeaVim）
+-- ====================
+keymap("n", "sl", "<C-w>w", opts)                          -- NextWindow（循环切换分割）
+keymap("n", "sh", "<C-w>W", opts)                          -- PreviousWindow（反向循环）
+keymap("n", "sw", "<cmd>vsplit<CR><cmd>lua vim.lsp.buf.definition()<CR>", opts)  -- EditSourceInNewWindow
+keymap("n", "sq", "<cmd>close<CR>", opts)                  -- Unsplit
+keymap("n", "<Leader>w", "<cmd>only<CR>", opts)            -- HideAllWindows
+keymap("n", "<Leader>c", "<cmd>Bdelete<CR>", opts)         -- CloseContent
+keymap("n", "<Leader>C", "<cmd>%bd|e#|bd#<CR>", opts)     -- CloseAllEditorsButActive
+keymap("n", "gw", "<cmd>NvimTreeFocus<CR>", opts)          -- OpenProjectWindows
+keymap("n", "<Leader>P", "<cmd>NvimTreeFindFile<CR>", opts) -- SelectIn（定位当前文件）
+
+-- ====================
+-- 构建（对照 IdeaVim zb = Java.BuildMenu）
+-- ====================
+keymap("n", "zb", "<cmd>TermExec cmd='mvn compile'<CR>", opts)  -- Java.BuildMenu
+
+-- ====================
+-- 书签（对照 IdeaVim）
+-- ====================
+keymap("n", "mm", "<cmd>BookmarkToggle<CR>", opts)   -- ToggleBookmark
+keymap("n", "gm", "<cmd>BookmarkNext<CR>", opts)     -- GotoNextBookmark
+keymap("n", "gM", "<cmd>BookmarkPrev<CR>", opts)     -- GotoPreviousBookmark
 
 -- ====================
 -- 来自 .vimrc 的全局 buffer-local 映射

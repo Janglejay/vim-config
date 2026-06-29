@@ -1,25 +1,28 @@
+-- 添加 lazy.nvim 到 rtp
+vim.opt.rtp:prepend(vim.fn.stdpath("data") .. "/lazy/lazy.nvim")
+
+local ok, lazy = pcall(require, "lazy")
+if not ok then
+  vim.notify("lazy.nvim not found. Run the install step first.", vim.log.levels.ERROR)
+  return
+end
+
+-- 基础配置（不依赖任何插件）
 require "user.options"
 require "user.keymaps"
-require "user.vim-compat" -- 迁移自 .vimrc 的兼容配置
-require "user.plugins"
-require "user.colorscheme"
-require "user.transparency"
-require "user.cmp"
-require "user.lsp"
-require "user.telescope"
--- require "user.treesitter"
-require "user.autopairs"
-require "user.comment"
-require "user.gitsigns"
-require "user.nvim-tree"
--- require "user.lsp.settings.rust_ls"
-require "user.bufferline"
-require "user.lualine"
-require "user.toggleterm"
-require "user.project"
-require "user.impatient"
--- require "user.indentline"
-require "user.alpha"
-require "user.whichkey"
+require "user.vim-compat"
 require "user.autocommands"
-require "user.todo-comments"
+
+-- 插件加载
+lazy.setup(require("user.plugins"), {
+  install = { colorscheme = { "gruvbox", "habamax" } },
+  ui = { border = "rounded" },
+  performance = {
+    rtp = {
+      disabled_plugins = {
+        "gzip", "matchit", "matchparen", "netrwPlugin",
+        "tarPlugin", "tohtml", "tutor", "zipPlugin",
+      },
+    },
+  },
+})

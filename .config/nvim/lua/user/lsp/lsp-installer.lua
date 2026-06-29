@@ -1,3 +1,7 @@
+-- 已迁移到 user.plugins.lsp，此文件保留仅作备份
+-- Mason、mason-lspconfig、pyright 和 jdtls 的配置均已移至 plugins/lsp.lua 和 plugins/java.lua
+do return end
+
 -- Mason + Mason-LSPConfig for Neovim 0.11+
 -- LSP servers installed by mason, configured via vim.lsp.config (native API)
 local mason_ok, mason = pcall(require, "mason")
@@ -27,7 +31,8 @@ mason.setup({
 })
 
 -- Mason-LSPConfig: auto-register servers with vim.lsp.config
-local lsp_servers = { "pyright", "jdtls" }
+-- local lsp_servers = { "pyright", "jdtls" }  -- jdtls 已迁移到 plugins/java.lua
+local lsp_servers = { "pyright" }
 mason_lspconfig.setup({
   ensure_installed = lsp_servers,
   automatic_installation = true,
@@ -46,13 +51,13 @@ vim.lsp.config("pyright", {
   },
 })
 
-vim.lsp.config("jdtls", {
-  cmd = { "jdtls" },
-  root_dir = function()
-    return vim.fs.root(0, { "pom.xml", "build.gradle", ".git", "mvnw", "gradlew" }) or vim.fn.getcwd()
-  end,
-})
+-- vim.lsp.config("jdtls", {  -- 已迁移到 plugins/java.lua（nvim-jdtls 方式）
+--   cmd = { "jdtls" },
+--   root_dir = function()
+--     return vim.fs.root(0, { "pom.xml", "build.gradle", ".git", "mvnw", "gradlew" }) or vim.fn.getcwd()
+--   end,
+-- })
 
 -- vim.lsp.enable starts registered servers
 vim.lsp.enable("pyright")
-vim.lsp.enable("jdtls")
+-- vim.lsp.enable("jdtls")  -- 已迁移到 plugins/java.lua

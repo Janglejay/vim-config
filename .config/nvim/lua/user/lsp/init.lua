@@ -5,7 +5,8 @@
 require("user.lsp.handlers").setup()
 
 -- Mason + vim.lsp.config for LSP server management
-require("user.lsp.lsp-installer")
+-- 已迁移到 user.plugins.lsp（lazy.nvim 插件方式），此行不再需要
+-- require("user.lsp.lsp-installer")
 
 -- Conform.nvim for formatting (replaces null-ls.nvim)
 require("user.lsp.conform")
