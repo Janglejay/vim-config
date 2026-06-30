@@ -24,13 +24,19 @@ log()  { echo -e "${GREEN}[✓]${NC} $*"; }
 warn() { echo -e "${YELLOW}[⟳]${NC} $*"; }
 err()  { echo -e "${RED}[✗]${NC} $*"; }
 
-# macOS 系统通知（cron 环境下用全路径）
+# macOS 系统通知
+# terminal-notifier 在 cron 环境下比 osascript 更可靠
+NOTIFIER=/opt/homebrew/bin/terminal-notifier
 notify() {
   local title="$1"
   local msg="$2"
-  /usr/bin/osascript \
-    -e "display notification \"$msg\" with title \"$title\" sound name \"Glass\"" \
-    2>/dev/null || true
+  if [ -x "$NOTIFIER" ]; then
+    "$NOTIFIER" -title "$title" -message "$msg" -sound Glass 2>/dev/null || true
+  else
+    /usr/bin/osascript \
+      -e "display notification \"$msg\" with title \"$title\" sound name \"Glass\"" \
+      2>/dev/null || true
+  fi
 }
 
 # 确保 tmux 可用
