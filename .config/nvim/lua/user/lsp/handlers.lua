@@ -69,8 +69,67 @@ end
 
 local function lsp_keymaps(bufnr)
   local opts = { noremap = true, silent = true }
+  local bopts = { noremap = true, silent = true, buffer = bufnr }
+
+  -- gD: 跳到声明（Declaration，比 Definition 更原始）
   vim.api.nvim_buf_set_keymap(bufnr, "n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
+
+  -- gd: 上下文感知（IDEA 风格）
+  --   • 在引用处 → 跳到定义
+  --   • 在定义处 → 显示所有引用（含属性/字段引用）
+  vim.keymap.set("n", "gd", function()
+    local fzf = require("fzf-lua")
+    local params = vim.lsp.util.make_position_params()
+
+    -- 查询定义位置（超时 6s）
+    local def_res = vim.lsp.buf_request_sync(0, "textDocument/definition", params, 6000)
+    local defs = {}
+    if def_res then
+      for _, res in pairs(def_res) do
+        for _, item in ipairs(type(res.result) == "table" and res.result or {}) do
+          table.insert(defs, item)
+        end
+      end
+    end
+
+    -- 判断光标是否在定义处
+    local cur_uri  = vim.uri_from_bufnr(0)
+    local cur_line = vim.api.nvim_win_get_cursor(0)[1] - 1  -- 0-indexed
+
+    local at_def = (#defs == 0)  -- 没有找到定义 → 本身就是定义
+    for _, d in ipairs(defs) do
+      local uri  = d.uri or d.targetUri or ""
+      local line = (d.range and d.range.start.line)
+                or (d.targetRange and d.targetRange.start.line) or -1
+      if uri == cur_uri and math.abs(line - cur_line) <= 1 then
+        at_def = true
+        break
+      end
+    end
+
+    if at_def then
+      -- 在定义处 → 显示引用（属性/方法均适用）
+      fzf.lsp_references({
+        fzf_opts = { ["--query"] = "!.m2" },
+        winopts  = { title = " gd → References (at declaration) " },
+      })
+    elseif #defs == 1 then
+      -- 只有一个定义 → 直接跳转
+      local d   = defs[1]
+      local uri = d.uri or d.targetUri
+      local ln  = ((d.range and d.range.start.line)
+                or (d.targetRange and d.targetRange.start.line) or 0) + 1
+      local col = (d.range and d.range.start.character)
+               or (d.targetRange and d.targetRange.start.character) or 0
+      vim.cmd("edit " .. vim.fn.fnameescape(vim.uri_to_fname(uri)))
+      vim.api.nvim_win_set_cursor(0, { ln, col })
+      vim.cmd("normal! zz")
+    else
+      -- 多个定义 → fzf 选择
+      fzf.lsp_definitions()
+    end
+  end, vim.tbl_extend("force", bopts, { desc = "gd: smart goto (def→refs, ref→def)" }))
+
   vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-p>", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
   -- gi: buffer-local（fzf-lua 全局映射的 buffer-local 备份，保证 LSP attach 后即可用）
   vim.api.nvim_buf_set_keymap(bufnr, "n", "gi",
