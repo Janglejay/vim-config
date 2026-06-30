@@ -21,6 +21,7 @@ return {
           require("nvim-treesitter.install").install({
             "java", "lua", "python", "rust", "go",
             "json", "yaml", "toml", "xml", "markdown", "bash",
+            "typescript", "javascript", "tsx", "vue", "css", "html",
           })
         end)
       end, 100)
@@ -91,5 +92,20 @@ return {
   {
     "JoosepAlviste/nvim-ts-context-commentstring",
     lazy = true,
+  },
+
+  -- nvim-ts-autotag: Vue/JSX/HTML 标签自动关闭和重命名
+  {
+    "windwp/nvim-ts-autotag",
+    event = { "BufReadPost", "BufNewFile" },
+    config = function()
+      require("nvim-ts-autotag").setup({
+        opts = {
+          enable_close = true,
+          enable_rename = true,
+          enable_close_on_slash = true,
+        },
+      })
+    end,
   },
 }
