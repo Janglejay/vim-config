@@ -35,3 +35,13 @@ vim.cmd [[
 --   autocmd!
 --   autocmd BufWritePre * lua vim.lsp.buf.formatting()
 -- augroup end
+
+-- 打开目录时自动启动 nvim-tree（netrw 已被禁用，由 nvim-tree 接管）
+vim.api.nvim_create_autocmd("VimEnter", {
+  callback = function(data)
+    if vim.fn.isdirectory(data.file) == 1 then
+      vim.cmd.cd(data.file)
+      require("nvim-tree.api").tree.open()
+    end
+  end,
+})

@@ -72,8 +72,9 @@ local function lsp_keymaps(bufnr)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-p>", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
-  -- vim.api.nvim_buf_set_keymap(bufnr, "n", "gi", "<cmd>lua vim.lsp.buf.implementation()<CR>", opts)
-  -- vim.api.nvim_buf_set_keymap(bufnr, "n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts)  -- replaced by fzf-lua
+  -- gi: buffer-local（fzf-lua 全局映射的 buffer-local 备份，保证 LSP attach 后即可用）
+  vim.api.nvim_buf_set_keymap(bufnr, "n", "gi",
+    "<cmd>lua require('fzf-lua').lsp_implementations()<CR>", opts)
   -- vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-p>", "<cmd>lua vim.lsp.buf.document_symbol()<CR>", opts)
   -- vim.api.nvim_buf_set_keymap(bufnr, "n", "<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", opts)
   vim.api.nvim_buf_set_keymap(bufnr, "n", "<Leader>R", "<cmd>lua vim.lsp.buf.rename()<CR>", opts)
