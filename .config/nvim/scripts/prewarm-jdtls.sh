@@ -24,16 +24,28 @@ log()  { echo -e "${GREEN}[✓]${NC} $*"; }
 warn() { echo -e "${YELLOW}[⟳]${NC} $*"; }
 err()  { echo -e "${RED}[✗]${NC} $*"; }
 
+# macOS 系统通知（cron 环境下用全路径）
+notify() {
+  local title="$1"
+  local msg="$2"
+  /usr/bin/osascript \
+    -e "display notification \"$msg\" with title \"$title\" sound name \"Glass\"" \
+    2>/dev/null || true
+}
+
 # 确保 tmux 可用
 if ! command -v tmux &>/dev/null; then
   err "需要 tmux，请先 brew install tmux"
   exit 1
 fi
 
+START_TIME=$(date '+%H:%M')
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  jdtls 预热脚本 — Java 项目索引构建"
 echo "  项目目录: $PROJECTS_DIR"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+notify "jdtls 索引构建开始 🔨" "开始为 JavaProjects 构建索引，完成后会通知你（$START_TIME）"
 
 total=0; skipped=0; warmed=0; failed=0
 
@@ -108,8 +120,18 @@ for project_dir in "$PROJECTS_DIR"/*/; do
   sleep 5
 done
 
+END_TIME=$(date '+%H:%M')
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  完成！共 $total 个 Java 项目"
 echo "  ✓ 新建/更新: $warmed  ⟳ 已跳过: $skipped  ✗ 失败: $failed"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# 结束通知
+if [ "$failed" -gt 0 ]; then
+  notify "jdtls 索引构建完成 ⚠️" \
+    "共 $total 个项目：✓$warmed 更新  ⟳$skipped 跳过  ✗$failed 失败（$START_TIME → $END_TIME）"
+else
+  notify "jdtls 索引构建完成 ✅" \
+    "共 $total 个项目：✓$warmed 更新  ⟳$skipped 跳过（$START_TIME → $END_TIME）"
+fi
