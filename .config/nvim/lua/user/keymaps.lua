@@ -133,29 +133,65 @@ keymap("n", "sl", "<C-w>w", opts)                          -- NextWindow（循�
 keymap("n", "sh", "<C-w>W", opts)                          -- PreviousWindow（反向循环）
 keymap("n", "sw", "<cmd>vsplit<CR><cmd>lua vim.lsp.buf.definition()<CR>", opts)  -- EditSourceInNewWindow
 keymap("n", "sq", "<cmd>close<CR>", opts)                  -- Unsplit
--- <Leader>w: 最大化/恢复 toggle（Tab 页方案）
--- 原理：新建 Tab 全屏显示当前文件，原 Tab 完整保留所有分割；tabclose 恢复
-local _zoom_tabnr = -1
+-- <Leader>w: 隐藏/恢复所有工具窗口（对应 IDEA Shift+F12 Hide All Windows）
+-- 隐藏：关闭 nvim-tree、terminal、aerial、call hierarchy 等工具窗口
+-- 恢复：把之前开着的工具窗口重新打开
+local _tools_hidden = false
+local _tools_state  = { nvim_tree = false, terminal = false, aerial = false }
+
+local function is_tool_win(win)
+  local buf   = vim.api.nvim_win_get_buf(win)
+  local bname = vim.api.nvim_buf_get_name(buf)
+  local bt    = vim.bo[buf].buftype
+  return bt == "terminal"
+      or bname:find("NvimTree")  ~= nil
+      or bname:find("aerial://") ~= nil
+      or bname:find("CallHierarchy") ~= nil
+      or bname == "[dap-repl]"
+      or bname:find("DAP") ~= nil
+end
+
 vim.keymap.set("n", "<Leader>w", function()
-  local cur_tabnr = vim.fn.tabpagenr()
-  if _zoom_tabnr == cur_tabnr then
-    -- 当前在"全屏 Tab"，关闭它回到原来的布局
-    vim.cmd("tabclose")
-    _zoom_tabnr = -1
+  if _tools_hidden then
+    -- 恢复：按之前记录的状态重新打开
+    if _tools_state.nvim_tree then vim.cmd("NvimTreeOpen") end
+    if _tools_state.aerial     then vim.cmd("AerialOpen") end
+    if _tools_state.terminal   then vim.cmd("ToggleTerm direction=horizontal") end
+    _tools_hidden = false
+    vim.notify("工具窗口已恢复", vim.log.levels.INFO)
   else
-    local real_wins = vim.tbl_filter(function(w)
-      return vim.api.nvim_win_get_config(w).relative == ""
-    end, vim.api.nvim_list_wins())
-    if #real_wins <= 1 then return end   -- 已经只有一个窗口，不操作
-    -- 在新 Tab 里打开当前文件（原 Tab 的所有分割保持不变）
-    local buf    = vim.api.nvim_get_current_buf()
-    local cursor = vim.api.nvim_win_get_cursor(0)
-    vim.cmd("tabnew")
-    vim.api.nvim_win_set_buf(0, buf)
-    vim.api.nvim_win_set_cursor(0, cursor)
-    _zoom_tabnr = vim.fn.tabpagenr()
+    -- 扫描当前哪些工具窗口是开的
+    _tools_state.nvim_tree = false
+    _tools_state.terminal  = false
+    _tools_state.aerial    = false
+
+    local tool_wins = {}
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+      if vim.api.nvim_win_get_config(win).relative ~= "" then goto continue end
+      if is_tool_win(win) then
+        local bname = vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(win))
+        local bt    = vim.bo[vim.api.nvim_win_get_buf(win)].buftype
+        if bname:find("NvimTree")   then _tools_state.nvim_tree = true end
+        if bt == "terminal"         then _tools_state.terminal  = true end
+        if bname:find("aerial://")  then _tools_state.aerial    = true end
+        table.insert(tool_wins, win)
+      end
+      ::continue::
+    end
+
+    if #tool_wins == 0 then
+      vim.notify("没有工具窗口可隐藏", vim.log.levels.INFO)
+      return
+    end
+
+    -- 关闭所有工具窗口
+    for _, win in ipairs(tool_wins) do
+      pcall(vim.api.nvim_win_close, win, false)
+    end
+    _tools_hidden = true
+    vim.notify("工具窗口已隐藏（再按 <Leader>w 恢复）", vim.log.levels.INFO)
   end
-end, { noremap = true, silent = true, desc = "Toggle maximize / restore layout" })
+end, { noremap = true, silent = true, desc = "Hide/Restore all tool windows (IDEA Shift+F12)" })
 keymap("n", "<Leader>c", "<cmd>Bdelete<CR>", opts)         -- CloseContent
 keymap("n", "<Leader>C", "<cmd>%bd|e#|bd#<CR>", opts)     -- CloseAllEditorsButActive
 keymap("n", "gw", "<cmd>NvimTreeFocus<CR>", opts)          -- OpenProjectWindows
