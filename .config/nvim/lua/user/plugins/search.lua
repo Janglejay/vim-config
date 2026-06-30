@@ -17,6 +17,11 @@ return {
         grep = {
           rg_opts = "--column --line-number --no-heading --color=always --smart-case --max-columns=512",
         },
+        -- jdtls 索引中响应慢，增大 LSP 超时（默认约 5000ms 容易超时）
+        lsp = {
+          async_or_timeout = 15000,   -- 15 秒
+          jump_to_single_result = true,
+        },
       })
 
       local opts = { noremap = true, silent = true }

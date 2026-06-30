@@ -62,18 +62,39 @@ local spaces = function()
 	return "spaces: " .. vim.api.nvim_buf_get_option(0, "shiftwidth")
 end
 
--- jdtls 索引进度（Neovim 0.10+ 原生 LSP progress API）
+-- jdtls 索引进度追踪
+-- LspProgress 事件触发更新，确保状态栏实时反映索引进度
+local _lsp_msg = ""
+
+vim.api.nvim_create_autocmd("LspProgress", {
+  callback = function(ev)
+    local client = vim.lsp.get_client_by_id(ev.data.client_id)
+    if not client then return end
+    local val = ev.data.params and ev.data.params.value or {}
+    if val.kind == "end" then
+      _lsp_msg = ""
+    else
+      local title = val.title or ""
+      local msg   = val.message or ""
+      local pct   = val.percentage and (" " .. val.percentage .. "%%") or ""
+      local text  = title .. (msg ~= "" and (": " .. msg) or "") .. pct
+      if text ~= "" then
+        _lsp_msg = "[" .. client.name .. "] " .. text
+      end
+    end
+    -- 强制 lualine 立即重绘
+    vim.cmd("redrawstatus")
+  end,
+})
+
 local lsp_progress = {
   function()
-    local msg = vim.lsp.status()
-    if msg == "" then return "" end
-    -- 截短过长的消息
-    if #msg > 55 then msg = msg:sub(1, 52) .. "..." end
+    if _lsp_msg == "" then return "" end
+    local msg = _lsp_msg
+    if #msg > 60 then msg = msg:sub(1, 57) .. "..." end
     return "󰔟 " .. msg
   end,
-  cond = function()
-    return vim.lsp.status() ~= ""
-  end,
+  cond = function() return _lsp_msg ~= "" end,
   color = { fg = "#ffbc67" },
 }
 
