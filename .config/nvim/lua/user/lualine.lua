@@ -62,56 +62,80 @@ local spaces = function()
 	return "spaces: " .. vim.api.nvim_buf_get_option(0, "shiftwidth")
 end
 
--- jdtls 索引进度：双保险方案
--- 1. LspProgress 事件（vim.schedule 确保主线程执行）
--- 2. vim.lsp.status() 轮询（每秒刷新，兜底）
-local _lsp_msg = ""
+-- jdtls 三状态常驻指示器
+-- ✓ jdtls（绿）= 已就绪  󰔟 索引中...（橙）= 构建中  ✗ jdtls（红）= 未连接
+local _jdtls = {
+  state   = "none",   -- "none" | "indexing" | "ready"
+  message = "",
+}
 
+-- LspProgress 事件更新状态
 vim.api.nvim_create_autocmd("LspProgress", {
   callback = function(ev)
     vim.schedule(function()
       local client = vim.lsp.get_client_by_id(ev.data.client_id)
-      if not client then return end
+      if not client or client.name ~= "jdtls" then return end
       local val = (ev.data.params or {}).value or {}
       if val.kind == "end" then
-        _lsp_msg = ""
+        _jdtls.state   = "ready"
+        _jdtls.message = ""
       else
+        _jdtls.state = "indexing"
         local title = val.title or ""
-        local msg   = val.message or ""
         local pct   = val.percentage and (" " .. val.percentage .. "%") or ""
-        local text  = title .. (msg ~= "" and (": " .. msg) or "") .. pct
-        if text ~= "" then
-          _lsp_msg = client.name .. ": " .. text
-        end
+        _jdtls.message = title .. pct
       end
       pcall(vim.cmd, "redrawstatus")
     end)
   end,
 })
 
--- 兜底轮询：直接读 vim.lsp.status()（每秒检查一次）
+-- 每 2 秒轮询 jdtls attach 状态（检测未连接 / 索引完成后变就绪）
 vim.defer_fn(function()
   local timer = vim.uv.new_timer()
   if timer then
-    timer:start(0, 1000, vim.schedule_wrap(function()
+    timer:start(0, 2000, vim.schedule_wrap(function()
+      local clients = vim.lsp.get_clients({ name = "jdtls" })
+      local prev = _jdtls.state
+      if #clients == 0 then
+        _jdtls.state   = "none"
+        _jdtls.message = ""
+      elseif _jdtls.state == "none" then
+        -- 刚刚连上，还不知道是否在索引，先标记 ready
+        _jdtls.state = "ready"
+      end
+      -- 也兜底检测 vim.lsp.status()
       local s = vim.lsp.status()
-      if s ~= _lsp_msg then
-        _lsp_msg = s
+      if s ~= "" and _jdtls.state ~= "indexing" then
+        _jdtls.state   = "indexing"
+        _jdtls.message = s
+      end
+      if _jdtls.state ~= prev then
         pcall(vim.cmd, "redrawstatus")
       end
     end))
   end
-end, 3000)
+end, 2000)
 
 local lsp_progress = {
   function()
-    if _lsp_msg == "" then return "" end
-    local msg = _lsp_msg
-    if #msg > 60 then msg = msg:sub(1, 57) .. "..." end
-    return "󰔟 " .. msg
+    if _jdtls.state == "none" then
+      return "✗ jdtls"
+    elseif _jdtls.state == "indexing" then
+      local msg = _jdtls.message ~= "" and _jdtls.message or "索引中..."
+      if #msg > 50 then msg = msg:sub(1, 47) .. "..." end
+      return "󰔟 " .. msg
+    else
+      return "✓ jdtls"
+    end
   end,
-  cond = function() return _lsp_msg ~= "" end,
-  color = { fg = "#ffbc67" },
+  -- 不加 cond，始终显示
+  color = function()
+    if _jdtls.state == "none"     then return { fg = "#f38ba8" }  -- red
+    elseif _jdtls.state == "indexing" then return { fg = "#fab387" }  -- orange
+    else                               return { fg = "#a6e3a1" }  -- green
+    end
+  end,
 }
 
 lualine.setup({

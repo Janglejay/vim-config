@@ -26,33 +26,29 @@ return {
 
       local opts = { noremap = true, silent = true }
 
-      -- <Leader>f: SearchEverywhere（IDEA 风格，选类型后搜索）
-      local search_modes = {
-        { label = "  Files         文件名搜索",       fn = function() fzf.files() end },
-        { label = "  Symbols       类·方法·字段",     fn = function() fzf.lsp_live_workspace_symbols() end },
-        { label = "  Classes       仅类和接口",        fn = function()
-            fzf.lsp_workspace_symbols({ query = "", regex_filter = "Class|Interface|Enum" })
-          end },
-        { label = "  Live Grep     内容全文搜索",      fn = function() fzf.live_grep() end },
-        { label = "  Recent Files  最近文件",          fn = function() fzf.oldfiles() end },
-      }
+      -- <Leader>f: SearchEverywhere（直接搜索，无需选择类型）
+      -- lsp_live_workspace_symbols 同时覆盖：类名、方法名、字段名
+      -- 结果中显示的文件名列也可在 fzf 里直接输入搜索（如 "OrderService.java"）
+      -- jdtls 未就绪时自动退化为文件搜索
       vim.keymap.set("n", "<Leader>f", function()
-        fzf.fzf_exec(
-          vim.tbl_map(function(m) return m.label end, search_modes),
-          {
-            prompt  = "SearchEverywhere❯ ",
-            winopts = { height = 0.28, width = 0.48, title = " 搜索类型 (Enter 确认) " },
-            actions = {
-              ["default"] = function(sel)
-                if not sel or not sel[1] then return end
-                for _, m in ipairs(search_modes) do
-                  if m.label == sel[1] then m.fn(); return end
-                end
-              end,
+        local has_lsp = vim.tbl_filter(function(c)
+          return c.server_capabilities.workspaceSymbolProvider == true
+        end, vim.lsp.get_clients({ bufnr = 0 }))
+
+        if #has_lsp > 0 then
+          fzf.lsp_live_workspace_symbols({
+            winopts = {
+              title  = " Search: 类·方法·字段·文件名 (jdtls) ",
+              height = 0.85, width = 0.90,
+              preview = { layout = "vertical", vertical = "down:45%" },
             },
-          }
-        )
-      end, vim.tbl_extend("force", opts, { desc = "SearchEverywhere (IDEA style)" }))
+          })
+        else
+          -- jdtls 未就绪，退化为文件名搜索
+          vim.notify("jdtls 未就绪，当前只搜文件名（等索引完成后重试）", vim.log.levels.WARN)
+          fzf.files()
+        end
+      end, vim.tbl_extend("force", opts, { desc = "SearchEverywhere" }))
 
       -- <Leader>F: FindInPath
       vim.keymap.set("n", "<Leader>F", function() fzf.live_grep() end,
