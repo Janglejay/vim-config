@@ -105,4 +105,5 @@ nvim_tree.setup({
 
 -- 快捷键
 vim.keymap.set('n', '<leader>e', ':NvimTreeToggle<CR>', { noremap = true, silent = true, desc = 'Toggle file tree' })
-vim.keymap.set('n', '<leader>f', ':NvimTreeFindFile<CR>', { noremap = true, silent = true, desc = 'Find current file in tree' })
+-- <leader>P → NvimTreeFindFile（SelectIn，对应 IdeaVim）
+-- <leader>f 已被 fzf-lua SearchEverywhere 使用

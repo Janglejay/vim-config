@@ -19,7 +19,4 @@ conform.setup({
   },
 })
 
--- Keymap for manual formatting
-vim.keymap.set({ "n", "v" }, "<leader>f", function()
-  conform.format({ async = true, timeout_ms = 5000 })
-end, { desc = "Format buffer with conform" })
+-- 格式化已由 keymaps.lua 中的 = 绑定处理，此处不重复绑定
