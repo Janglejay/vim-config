@@ -14,10 +14,8 @@ return {
         ensure_installed = {
           "pyright",
           "ts_ls",
-          "volar",
-          "eslint",
+          "vue_ls",
           "cssls",
-          "html",
           "emmet_ls",
         },
         automatic_installation = true,
@@ -58,21 +56,20 @@ return {
       })
       vim.lsp.enable("ts_ls")
 
-      -- ── Vue 3（Volar）────────────────────────────────────────────────────
-      vim.lsp.config("volar", {
+      -- ── Vue 3（vue_ls / Vue Language Tools 2.x）─────────────────────────
+      vim.lsp.config("vue_ls", {
         cmd = { mason_bin .. "/vue-language-server", "--stdio" },
         filetypes = { "vue" },
         root_markers = { "vue.config.js", "vue.config.ts", "vite.config.js", "vite.config.ts", "nuxt.config.ts", "package.json", ".git" },
         init_options = {
           vue = { hybridMode = false },
           typescript = {
-            -- 优先使用项目本地 typescript，找不到则用 mason 安装的
             tsdk = (function()
               local local_ts = vim.fn.getcwd() .. "/node_modules/typescript/lib"
               if vim.fn.isdirectory(local_ts) == 1 then
                 return local_ts
               end
-              return vim.fn.stdpath("data") .. "/mason/packages/typescript-language-server/node_modules/typescript/lib"
+              return vim.fn.stdpath("data") .. "/mason/packages/vue-language-server/node_modules/typescript/lib"
             end)(),
           },
         },
@@ -82,7 +79,7 @@ return {
         end,
         capabilities = handlers.capabilities,
       })
-      vim.lsp.enable("volar")
+      vim.lsp.enable("vue_ls")
 
       -- ── ESLint ───────────────────────────────────────────────────────────
       vim.lsp.config("eslint", {
