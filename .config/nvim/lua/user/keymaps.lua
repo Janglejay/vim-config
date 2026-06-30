@@ -60,6 +60,13 @@ keymap("n", "gl", "<C-w>l", opts)
 keymap("n", "sV", ":sp<CR>", opts)
 keymap("n", "sv", ":vs<CR>", opts)
 
+-- 窗口缩放（键盘替代鼠标拖拽）
+-- <C-Up/Down>: 调整高度，<C-Left/Right>: 调整宽度，每次 3 格
+keymap("n", "<C-Up>",    ":resize +3<CR>",          opts)
+keymap("n", "<C-Down>",  ":resize -3<CR>",          opts)
+keymap("n", "<C-Right>", ":vertical resize +3<CR>", opts)
+keymap("n", "<C-Left>",  ":vertical resize -3<CR>", opts)
+
 -- Tab 操作
 keymap("n", "<Tab>", ">>", opts)          -- Tab 右缩进
 keymap("n", "<BS>", "<<", opts)           -- Backspace 左缩进
@@ -137,54 +144,66 @@ keymap("n", "sq", "<cmd>close<CR>", opts)                  -- Unsplit
 -- 隐藏：关闭 nvim-tree、terminal、aerial、call hierarchy 等工具窗口
 -- 恢复：把之前开着的工具窗口重新打开
 local _tools_hidden = false
-local _tools_state  = { nvim_tree = false, terminal = false, aerial = false }
+local _tools_state  = {
+  nvim_tree      = false,
+  terminal       = false,
+  aerial         = false,
+  call_hierarchy = false,
+}
 
 local function is_tool_win(win)
   local buf   = vim.api.nvim_win_get_buf(win)
   local bname = vim.api.nvim_buf_get_name(buf)
   local bt    = vim.bo[buf].buftype
   return bt == "terminal"
-      or bname:find("NvimTree")  ~= nil
-      or bname:find("aerial://") ~= nil
-      or bname:find("CallHierarchy") ~= nil
+      or bname:find("NvimTree")       ~= nil
+      or bname:find("aerial://")      ~= nil
+      or bname:find("CallHierarchy")  ~= nil
       or bname == "[dap-repl]"
       or bname:find("DAP") ~= nil
 end
 
 vim.keymap.set("n", "<Leader>w", function()
+  local ch = require("user.call_hierarchy")
+
   if _tools_hidden then
-    -- 恢复：按之前记录的状态重新打开
-    if _tools_state.nvim_tree then vim.cmd("NvimTreeOpen") end
-    if _tools_state.aerial     then vim.cmd("AerialOpen") end
-    if _tools_state.terminal   then vim.cmd("ToggleTerm direction=horizontal") end
+    -- 恢复所有工具窗口
+    if _tools_state.nvim_tree      then vim.cmd("NvimTreeOpen") end
+    if _tools_state.aerial         then vim.cmd("AerialOpen") end
+    if _tools_state.terminal       then vim.cmd("ToggleTerm direction=horizontal") end
+    if _tools_state.call_hierarchy then ch.reopen() end
     _tools_hidden = false
     vim.notify("工具窗口已恢复", vim.log.levels.INFO)
   else
     -- 扫描当前哪些工具窗口是开的
-    _tools_state.nvim_tree = false
-    _tools_state.terminal  = false
-    _tools_state.aerial    = false
+    _tools_state.nvim_tree      = false
+    _tools_state.terminal       = false
+    _tools_state.aerial         = false
+    _tools_state.call_hierarchy = ch.is_open()
 
     local tool_wins = {}
     for _, win in ipairs(vim.api.nvim_list_wins()) do
       if vim.api.nvim_win_get_config(win).relative ~= "" then goto continue end
       if is_tool_win(win) then
-        local bname = vim.api.nvim_buf_get_name(vim.api.nvim_win_get_buf(win))
-        local bt    = vim.bo[vim.api.nvim_win_get_buf(win)].buftype
-        if bname:find("NvimTree")   then _tools_state.nvim_tree = true end
-        if bt == "terminal"         then _tools_state.terminal  = true end
-        if bname:find("aerial://")  then _tools_state.aerial    = true end
+        local buf   = vim.api.nvim_win_get_buf(win)
+        local bname = vim.api.nvim_buf_get_name(buf)
+        local bt    = vim.bo[buf].buftype
+        if bname:find("NvimTree")  then _tools_state.nvim_tree = true end
+        if bt == "terminal"        then _tools_state.terminal  = true end
+        if bname:find("aerial://") then _tools_state.aerial    = true end
         table.insert(tool_wins, win)
       end
       ::continue::
     end
 
-    if #tool_wins == 0 then
+    if #tool_wins == 0 and not _tools_state.call_hierarchy then
       vim.notify("没有工具窗口可隐藏", vim.log.levels.INFO)
       return
     end
 
-    -- 关闭所有工具窗口
+    -- 关闭 call hierarchy（包含 preview 窗口）
+    if _tools_state.call_hierarchy then ch.close_all() end
+    -- 关闭其他工具窗口
     for _, win in ipairs(tool_wins) do
       pcall(vim.api.nvim_win_close, win, false)
     end
