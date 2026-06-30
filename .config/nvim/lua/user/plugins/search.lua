@@ -66,9 +66,17 @@ return {
             end, 100)
           end
         else
-          -- jdtls 未就绪（红色进度条），退化为文件名搜索
+          -- jdtls 未就绪：检测是否是 Java 项目，如果是则尝试启动
+          local triggered = _G.start_jdtls_for_project and _G.start_jdtls_for_project()
+          if triggered then
+            vim.notify(
+              "jdtls 正在启动，当前显示文件搜索，索引完成（状态栏变 ✓）后按 <Leader>f 即可搜符号",
+              vim.log.levels.INFO
+            )
+          end
+          -- 退化为文件名搜索（jdtls 在后台启动）
           fzf.files({
-            winopts = { title = " Files (jdtls 未就绪，等状态栏变绿后重试) " }
+            winopts = { title = " Files (jdtls 启动中，完成后可搜类·方法) " }
           })
         end
       end, vim.tbl_extend("force", opts, { desc = "SearchEverywhere" }))

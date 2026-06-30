@@ -46,32 +46,35 @@ vim.api.nvim_create_autocmd("VimEnter", {
   end,
 })
 
--- Java 项目自动启动 jdtls（不需要先打开 .java 文件）
--- 在 pom.xml / build.gradle 项目中打开任意文件时，主动加载 jdtls
-vim.api.nvim_create_autocmd("VimEnter", {
-  once = true,
-  callback = function()
-    vim.defer_fn(function()
-      -- 已经有 jdtls 在跑，跳过
-      if #vim.lsp.get_clients({ name = "jdtls" }) > 0 then return end
+-- Java 项目 jdtls 启动辅助函数（供 <leader>f 调用）
+-- 通过打开一个 Java 文件来触发 jdtls（比直接 lazy.load 更安全）
+_G.start_jdtls_for_project = function()
+  if #vim.lsp.get_clients({ name = "jdtls" }) > 0 then return true end
 
-      -- 检测是否是 Java 项目
-      local root = vim.fs.root(0, { "pom.xml", "build.gradle", "mvnw", "gradlew" })
-      if not root then return end
-      local is_java_project = vim.fn.filereadable(root .. "/pom.xml") == 1
-                           or vim.fn.filereadable(root .. "/build.gradle") == 1
-      if not is_java_project then return end
+  local root = vim.fs.root(0, { "pom.xml", "build.gradle", "mvnw", "gradlew" })
+           or vim.fn.getcwd()
+  if vim.fn.filereadable(root .. "/pom.xml") == 0
+     and vim.fn.filereadable(root .. "/build.gradle") == 0 then
+    return false
+  end
 
-      -- 用 lazy.nvim 强制加载 nvim-jdtls（等同于打开 .java 文件时的触发）
-      -- 配置函数里的 start_or_attach 会用当前 cwd 检测项目根目录
-      local ok, lazy = pcall(require, "lazy")
-      if ok then
-        lazy.load({ plugins = { "nvim-jdtls" } })
-        vim.notify(
-          "Java 项目检测到，jdtls 正在启动（" .. vim.fn.fnamemodify(root, ":t") .. "）",
-          vim.log.levels.INFO
-        )
-      end
-    end, 800)  -- 等待 800ms 让 lazy.nvim 和其他插件先初始化
-  end,
-})
+  -- 找一个 Java 文件来触发 jdtls（jdtls 需要 Java 文件 context 才能正确初始化）
+  local java_files = vim.fn.systemlist(
+    "fd --type f -e java --max-results 1 " .. vim.fn.shellescape(root) .. " 2>/dev/null")
+  if #java_files == 0 then return false end
+
+  -- 在后台打开 Java 文件（不改变用户当前窗口）
+  local cur_win = vim.api.nvim_get_current_win()
+  vim.cmd("split " .. vim.fn.fnameescape(java_files[1]))
+  local java_win = vim.api.nvim_get_current_win()
+  -- jdtls 会通过 FileType=java 自动触发
+  -- 立刻关闭窗口（jdtls 已经开始初始化了）
+  vim.defer_fn(function()
+    pcall(vim.api.nvim_win_close, java_win, true)
+    if vim.api.nvim_win_is_valid(cur_win) then
+      vim.api.nvim_set_current_win(cur_win)
+    end
+  end, 200)
+
+  return true  -- 已触发启动
+end
