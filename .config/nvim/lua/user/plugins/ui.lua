@@ -38,10 +38,10 @@ return {
     end,
   },
 
-  -- 终端
+  -- 终端（用 cmd 触发懒加载，保留 keymaps.lua 里 st 的原始映射）
   {
     "akinsho/toggleterm.nvim",
-    keys = { { "st", desc = "Toggle terminal" } },
+    cmd = { "ToggleTerm", "TermExec", "ToggleTermToggleAll" },
     config = function()
       require "user.toggleterm"
     end,
