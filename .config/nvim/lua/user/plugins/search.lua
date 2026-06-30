@@ -31,15 +31,26 @@ return {
       -- 结果中显示的文件名列也可在 fzf 里直接输入搜索（如 "OrderService.java"）
       -- jdtls 未就绪时自动退化为文件搜索
       vim.keymap.set("n", "<Leader>f", function()
-        -- 检查 jdtls 是否全局运行（不限制 bufnr，因为非 Java 文件也需要搜索）
-        -- workspaceSymbolProvider 在 jdtls 里是 table 不是 true，用 ~= nil 判断
-        local jdtls_ready = vim.tbl_filter(function(c)
-          return c.name == "jdtls"
-              and c.server_capabilities.workspaceSymbolProvider ~= nil
-              and c.server_capabilities.workspaceSymbolProvider ~= false
-        end, vim.lsp.get_clients())   -- 不加 bufnr，全局查
+        -- 全局查找 jdtls（不限制 bufnr，在 pom.xml/.json/.xml 等文件中也能找到）
+        local jdtls_client = nil
+        for _, c in ipairs(vim.lsp.get_clients()) do
+          if c.name == "jdtls"
+             and c.server_capabilities.workspaceSymbolProvider ~= nil
+             and c.server_capabilities.workspaceSymbolProvider ~= false then
+            jdtls_client = c
+            break
+          end
+        end
 
-        if #jdtls_ready > 0 then
+        if jdtls_client then
+          -- lsp_live_workspace_symbols 发请求时需要 jdtls attach 到当前 buffer
+          -- 如果当前 buffer 不是 .java 文件，临时 attach，让请求可以发出
+          local bufnr = vim.api.nvim_get_current_buf()
+          local was_attached = vim.lsp.buf_is_attached(bufnr, jdtls_client.id)
+          if not was_attached then
+            pcall(vim.lsp.buf_attach_client, bufnr, jdtls_client.id)
+          end
+
           fzf.lsp_live_workspace_symbols({
             winopts = {
               title  = " Search: 类·方法·字段·文件名 ",
@@ -47,10 +58,17 @@ return {
               preview = { layout = "vertical", vertical = "down:45%" },
             },
           })
+
+          -- 查询结束后（fzf 关闭），如果是临时 attach 就 detach 还原
+          if not was_attached then
+            vim.defer_fn(function()
+              pcall(vim.lsp.buf_detach_client, bufnr, jdtls_client.id)
+            end, 100)
+          end
         else
           -- jdtls 未就绪（红色进度条），退化为文件名搜索
           fzf.files({
-            winopts = { title = " Files (jdtls 未就绪，索引完成后可搜符号) " }
+            winopts = { title = " Files (jdtls 未就绪，等状态栏变绿后重试) " }
           })
         end
       end, vim.tbl_extend("force", opts, { desc = "SearchEverywhere" }))
