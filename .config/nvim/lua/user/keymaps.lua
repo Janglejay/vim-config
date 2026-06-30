@@ -133,7 +133,33 @@ keymap("n", "sl", "<C-w>w", opts)                          -- NextWindow（循�
 keymap("n", "sh", "<C-w>W", opts)                          -- PreviousWindow（反向循环）
 keymap("n", "sw", "<cmd>vsplit<CR><cmd>lua vim.lsp.buf.definition()<CR>", opts)  -- EditSourceInNewWindow
 keymap("n", "sq", "<cmd>close<CR>", opts)                  -- Unsplit
-keymap("n", "<Leader>w", "<cmd>only<CR>", opts)            -- HideAllWindows
+-- <Leader>w: 最大化/恢复窗口布局 toggle（对应 IdeaVim HideAllWindows）
+local _zoom = {
+  active = false,
+  file   = vim.fn.stdpath("cache") .. "/.nvim_zoom_layout.vim",
+}
+vim.keymap.set("n", "<Leader>w", function()
+  if _zoom.active then
+    -- 恢复上次布局
+    if vim.fn.filereadable(_zoom.file) == 1 then
+      vim.cmd("silent! source " .. vim.fn.fnameescape(_zoom.file))
+    end
+    _zoom.active = false
+  else
+    -- 只有一个真实窗口时不操作
+    local real_wins = vim.tbl_filter(function(w)
+      return vim.api.nvim_win_get_config(w).relative == ""
+    end, vim.api.nvim_list_wins())
+    if #real_wins <= 1 then return end
+    -- 保存当前布局（含 buffer 分配和窗口尺寸）
+    local orig = vim.o.sessionoptions
+    vim.o.sessionoptions = "blank,buffers,curdir,folds,tabpages,winsize,winpos,localoptions"
+    vim.cmd("silent! mksession! " .. vim.fn.fnameescape(_zoom.file))
+    vim.o.sessionoptions = orig
+    vim.cmd("only")
+    _zoom.active = true
+  end
+end, { noremap = true, silent = true, desc = "Toggle maximize/restore (HideAllWindows)" })
 keymap("n", "<Leader>c", "<cmd>Bdelete<CR>", opts)         -- CloseContent
 keymap("n", "<Leader>C", "<cmd>%bd|e#|bd#<CR>", opts)     -- CloseAllEditorsButActive
 keymap("n", "gw", "<cmd>NvimTreeFocus<CR>", opts)          -- OpenProjectWindows
