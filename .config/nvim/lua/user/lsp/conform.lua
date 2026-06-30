@@ -12,6 +12,15 @@ conform.setup({
     lua = { "stylua" },
     json = { "jq" },
     yaml = { "yamlfmt" },
+    -- 前端：统一用 prettier
+    javascript      = { "prettier" },
+    javascriptreact = { "prettier" },
+    typescript      = { "prettier" },
+    typescriptreact = { "prettier" },
+    vue             = { "prettier" },
+    css             = { "prettier" },
+    scss            = { "prettier" },
+    html            = { "prettier" },
   },
   format_on_save = {
     timeout_ms = 5000,
