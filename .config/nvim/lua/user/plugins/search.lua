@@ -26,9 +26,33 @@ return {
 
       local opts = { noremap = true, silent = true }
 
-      -- <Leader>f: SearchEverywhere
-      vim.keymap.set("n", "<Leader>f", function() fzf.files() end,
-        vim.tbl_extend("force", opts, { desc = "SearchEverywhere" }))
+      -- <Leader>f: SearchEverywhere（IDEA 风格，选类型后搜索）
+      local search_modes = {
+        { label = "  Files         文件名搜索",       fn = function() fzf.files() end },
+        { label = "  Symbols       类·方法·字段",     fn = function() fzf.lsp_live_workspace_symbols() end },
+        { label = "  Classes       仅类和接口",        fn = function()
+            fzf.lsp_workspace_symbols({ query = "", regex_filter = "Class|Interface|Enum" })
+          end },
+        { label = "  Live Grep     内容全文搜索",      fn = function() fzf.live_grep() end },
+        { label = "  Recent Files  最近文件",          fn = function() fzf.oldfiles() end },
+      }
+      vim.keymap.set("n", "<Leader>f", function()
+        fzf.fzf_exec(
+          vim.tbl_map(function(m) return m.label end, search_modes),
+          {
+            prompt  = "SearchEverywhere❯ ",
+            winopts = { height = 0.28, width = 0.48, title = " 搜索类型 (Enter 确认) " },
+            actions = {
+              ["default"] = function(sel)
+                if not sel or not sel[1] then return end
+                for _, m in ipairs(search_modes) do
+                  if m.label == sel[1] then m.fn(); return end
+                end
+              end,
+            },
+          }
+        )
+      end, vim.tbl_extend("force", opts, { desc = "SearchEverywhere (IDEA style)" }))
 
       -- <Leader>F: FindInPath
       vim.keymap.set("n", "<Leader>F", function() fzf.live_grep() end,
@@ -40,6 +64,11 @@ return {
 
       -- gr: FindUsages（默认过滤 Maven .m2 依赖，在 fzf 里删掉 "!.m2" 可看全部）
       vim.keymap.set("n", "gr", function()
+        local clients = vim.lsp.get_clients({ bufnr = 0 })
+        if #clients == 0 then
+          vim.notify("LSP 未连接，请等待 jdtls 索引完成", vim.log.levels.WARN)
+          return
+        end
         fzf.lsp_references({
           fzf_opts = { ["--query"] = "!.m2" },
           winopts   = { title = " FindUsages (! to show Maven) " },

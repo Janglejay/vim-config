@@ -78,6 +78,23 @@ local function lsp_keymaps(bufnr)
   --   • 在引用处 → 跳到定义
   --   • 在定义处 → 显示所有引用（含属性/字段引用）
   vim.keymap.set("n", "gd", function()
+    -- 检查是否有支持 definition 的客户端（避免 "not supported" 报错）
+    local has_def = vim.tbl_contains(
+      vim.tbl_map(function(c)
+        return c.server_capabilities.definitionProvider == true
+      end, vim.lsp.get_clients({ bufnr = 0 })),
+      true
+    )
+    if not has_def then
+      -- 列出当前 attach 的所有客户端（便于调试）
+      local names = vim.tbl_map(function(c) return c.name end,
+                    vim.lsp.get_clients({ bufnr = 0 }))
+      local hint = #names == 0
+        and "jdtls 未连接，请等待索引完成或按 <Leader>jR 重建"
+        or  ("jdtls 正在初始化，已 attach: " .. table.concat(names, ", ") .. "。请稍等片刻再试")
+      vim.notify(hint, vim.log.levels.WARN)
+      return
+    end
     local fzf = require("fzf-lua")
     local params = vim.lsp.util.make_position_params()
 
