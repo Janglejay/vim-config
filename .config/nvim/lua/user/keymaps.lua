@@ -60,12 +60,12 @@ keymap("n", "gl", "<C-w>l", opts)
 keymap("n", "sV", ":sp<CR>", opts)
 keymap("n", "sv", ":vs<CR>", opts)
 
--- 窗口缩放（键盘替代鼠标拖拽）
--- <C-Up/Down>: 调整高度，<C-Left/Right>: 调整宽度，每次 3 格
-keymap("n", "<C-Up>",    ":resize +3<CR>",          opts)
-keymap("n", "<C-Down>",  ":resize -3<CR>",          opts)
-keymap("n", "<C-Right>", ":vertical resize +3<CR>", opts)
-keymap("n", "<C-Left>",  ":vertical resize -3<CR>", opts)
+-- 窗口缩放：<Leader> + 方向键，每次 4 格
+-- 比 <C-arrow> 更不易与终端快捷键冲突
+vim.keymap.set("n", "<Leader><Up>",    ":resize +4<CR>",          { noremap=true, silent=true, desc="窗口增高" })
+vim.keymap.set("n", "<Leader><Down>",  ":resize -4<CR>",          { noremap=true, silent=true, desc="窗口减高" })
+vim.keymap.set("n", "<Leader><Right>", ":vertical resize +4<CR>", { noremap=true, silent=true, desc="窗口加宽" })
+vim.keymap.set("n", "<Leader><Left>",  ":vertical resize -4<CR>", { noremap=true, silent=true, desc="窗口减宽" })
 
 -- Tab 操作
 keymap("n", "<Tab>", ">>", opts)          -- Tab 右缩进

@@ -1,16 +1,20 @@
 -- Call Hierarchy 右侧边栏 + 代码预览
--- 布局：右列 66 宽，上方树形结构，下方代码预览
--- gR 打开，<CR> 跳转，p/o 预览，q 关闭，gl 进入，gh 返回
+-- 布局：右列 72 宽，上方树（按内容自适应高度），下方代码预览
+-- gR 打开，<CR> 跳转，p/o 预览，q 关闭
 
 local M = {}
 
 local state = {
-  buf         = -1,   -- 调用链树 buffer
+  buf         = -1,   -- 调用链树 buffer（nofile，modifiable=false）
   win         = -1,   -- 调用链树 window（上方）
   preview_win = -1,   -- 代码预览 window（下方）
   entries     = {},   -- { file, lnum } 每行对应的跳转位置
   source_win  = -1,   -- 触发 gR 时的代码窗口
 }
+
+local SIDEBAR_WIDTH = 72
+local HEADER_SIZE   = 2
+local FOOTER_SIZE   = 2
 
 -- ──────────────────────────────────────────────
 -- 构建带树形连线的文本行
@@ -20,8 +24,8 @@ local function build_tree(root)
   local entries = {}
   local visited = {}
 
-  local root_file = vim.uri_to_fname(root.uri)
-  local root_lnum = root.selectionRange.start.line + 1
+  local root_file  = vim.uri_to_fname(root.uri)
+  local root_lnum  = root.selectionRange.start.line + 1
   local root_fname = vim.fn.fnamemodify(root_file, ":t")
   table.insert(lines,   "◉ " .. root.name .. "  [" .. root_fname .. ":" .. root_lnum .. "]")
   table.insert(entries, { file = root_file, lnum = root_lnum })
@@ -68,7 +72,8 @@ local function build_tree(root)
 end
 
 -- ──────────────────────────────────────────────
--- 代码预览：在 preview_win 里打开文件并定位，不改变焦点
+-- 代码预览：切换到 preview_win 打开文件，再回到树
+-- 使用直接 window 切换（避免 nvim_win_call 的 buffer 混淆问题）
 -- ──────────────────────────────────────────────
 local function update_preview(row)
   if not vim.api.nvim_win_is_valid(state.preview_win) then return end
@@ -76,19 +81,24 @@ local function update_preview(row)
   if not e or not e.file or not e.lnum then return end
   if vim.fn.filereadable(e.file) == 0 then return end
 
-  pcall(vim.api.nvim_win_call, state.preview_win, function()
-    local cur_name = vim.api.nvim_buf_get_name(
-      vim.api.nvim_win_get_buf(state.preview_win))
+  local cur_win = vim.api.nvim_get_current_win()
+  pcall(function()
+    vim.api.nvim_set_current_win(state.preview_win)
+    local cur_name = vim.api.nvim_buf_get_name(0)
     if cur_name ~= e.file then
       vim.cmd("edit " .. vim.fn.fnameescape(e.file))
     end
-    vim.api.nvim_win_set_cursor(state.preview_win, { e.lnum, 0 })
+    pcall(vim.api.nvim_win_set_cursor, 0, { e.lnum, 0 })
     vim.cmd("normal! zz")
   end)
+  -- 无论成功失败，焦点都回到树窗口
+  if vim.api.nvim_win_is_valid(cur_win) then
+    vim.api.nvim_set_current_win(cur_win)
+  end
 end
 
 -- ──────────────────────────────────────────────
--- 侧边栏 buffer 的快捷键
+-- 在 source_win 里跳转到 entry
 -- ──────────────────────────────────────────────
 local function open_in_source(entry, back_to_sidebar)
   if not entry or not entry.file then return end
@@ -103,16 +113,50 @@ local function open_in_source(entry, back_to_sidebar)
   end
 end
 
+-- ──────────────────────────────────────────────
+-- 创建窗口的公共函数（M.open 和 M.reopen 共用）
+-- ──────────────────────────────────────────────
+local function create_windows(source_win, tree_h)
+  vim.api.nvim_set_current_win(source_win)
+  vim.cmd("botright " .. SIDEBAR_WIDTH .. "vsplit")
+  state.win = vim.api.nvim_get_current_win()
+  vim.api.nvim_win_set_buf(state.win, state.buf)
+  vim.wo[state.win].winfixwidth    = true
+  vim.wo[state.win].number         = false
+  vim.wo[state.win].relativenumber = false
+  vim.wo[state.win].wrap           = false
+  vim.wo[state.win].signcolumn     = "no"
+  vim.wo[state.win].cursorline     = true
+  vim.api.nvim_win_set_height(state.win, tree_h)
+
+  -- 在树下方创建预览窗口
+  -- 关键：先 split，再立刻 enew 创建独立 buffer
+  -- 否则预览窗口会共享树的 nofile buffer（导致 E21）
+  vim.cmd("belowright split")
+  state.preview_win = vim.api.nvim_get_current_win()
+  vim.cmd("enew")   -- 创建独立的可写 buffer
+  vim.bo[0].bufhidden = "wipe"
+  vim.wo[state.preview_win].number         = true
+  vim.wo[state.preview_win].relativenumber = false
+  vim.wo[state.preview_win].wrap           = false
+  vim.wo[state.preview_win].signcolumn     = "yes:1"
+  vim.wo[state.preview_win].cursorline     = true
+
+  -- 焦点回到树窗口
+  vim.api.nvim_set_current_win(state.win)
+end
+
+-- ──────────────────────────────────────────────
+-- 侧边栏 buffer 的快捷键（只注册一次）
+-- ──────────────────────────────────────────────
 local function setup_keymaps(buf)
   local o = { buffer = buf, noremap = true, silent = true }
 
-  -- <CR>: 跳转到条目，焦点移到代码窗口
   vim.keymap.set("n", "<CR>", function()
     local row = vim.api.nvim_win_get_cursor(0)[1]
     open_in_source(state.entries[row], false)
   end, vim.tbl_extend("force", o, { desc = "Jump to entry" }))
 
-  -- p / o: 预览（跳转但光标留在侧边栏）
   for _, key in ipairs({ "p", "o" }) do
     vim.keymap.set("n", key, function()
       local row = vim.api.nvim_win_get_cursor(0)[1]
@@ -120,15 +164,8 @@ local function setup_keymaps(buf)
     end, vim.tbl_extend("force", o, { desc = "Preview entry (stay in sidebar)" }))
   end
 
-  -- q: 关闭侧边栏 + 预览窗口
   vim.keymap.set("n", "q", function()
-    if vim.api.nvim_win_is_valid(state.preview_win) then
-      pcall(vim.api.nvim_win_close, state.preview_win, true)
-    end
-    if vim.api.nvim_win_is_valid(state.win) then
-      pcall(vim.api.nvim_win_close, state.win, true)
-    end
-    -- 回到代码窗口
+    M.close_all()
     if vim.api.nvim_win_is_valid(state.source_win) then
       vim.api.nvim_set_current_win(state.source_win)
     end
@@ -188,19 +225,17 @@ function M.open()
   end
 
   -- 填充内容
-  local HEADER_SIZE = 2
-  local FOOTER_SIZE = 2
   local all_lines = {}
   table.insert(all_lines, " Call Hierarchy: " .. root_items[1].name)
-  table.insert(all_lines, string.rep("─", 62))
-  for _, l in ipairs(lines)  do table.insert(all_lines, l) end
-  table.insert(all_lines, string.rep("─", 62))
-  table.insert(all_lines, " <CR>跳转  p/o预览  q关闭  <C-↑↓>调高度")
+  table.insert(all_lines, string.rep("─", SIDEBAR_WIDTH - 2))
+  for _, l in ipairs(lines) do table.insert(all_lines, l) end
+  table.insert(all_lines, string.rep("─", SIDEBAR_WIDTH - 2))
+  table.insert(all_lines, " <CR>跳转  p/o预览  q关闭  <Leader>↑↓调高度")
 
   local offset_entries = {}
-  for _ = 1, HEADER_SIZE do table.insert(offset_entries, { file = nil, lnum = nil }) end
+  for _ = 1, HEADER_SIZE do table.insert(offset_entries, {}) end
   for _, e in ipairs(entries) do table.insert(offset_entries, e) end
-  for _ = 1, FOOTER_SIZE do table.insert(offset_entries, { file = nil, lnum = nil }) end
+  for _ = 1, FOOTER_SIZE do table.insert(offset_entries, {}) end
 
   vim.bo[state.buf].modifiable = true
   vim.api.nvim_buf_set_lines(state.buf, 0, -1, false, all_lines)
@@ -209,106 +244,61 @@ function M.open()
   state.entries    = offset_entries
   state.source_win = source_win
 
-  -- 检查侧边栏是否已打开
-  local tree_win_exists = vim.api.nvim_win_is_valid(state.win)
-                       and vim.api.nvim_win_get_buf(state.win) == state.buf
+  -- 树高度：内容行数自适应（最少 8 行，最多屏幕 45%）
+  local tree_h = math.max(8, math.min(#all_lines + 1, math.floor(vim.o.lines * 0.45)))
 
-  if tree_win_exists then
-    -- 已存在：刷新内容，重置光标
+  -- 检查侧边栏是否已打开
+  local tree_win_open = vim.api.nvim_win_is_valid(state.win)
+                     and vim.api.nvim_win_get_buf(state.win) == state.buf
+
+  if tree_win_open then
     vim.api.nvim_win_set_cursor(state.win, { HEADER_SIZE + 1, 0 })
     vim.api.nvim_set_current_win(state.win)
   else
-    -- 新建右列（66 宽），包含树 + 预览
-    vim.api.nvim_set_current_win(source_win)
-    vim.cmd("botright 66vsplit")
-    state.win = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_set_buf(state.win, state.buf)
-    vim.wo[state.win].winfixwidth    = true
-    vim.wo[state.win].number         = false
-    vim.wo[state.win].relativenumber = false
-    vim.wo[state.win].wrap           = false
-    vim.wo[state.win].signcolumn     = "no"
-    vim.wo[state.win].cursorline     = true
-    vim.api.nvim_win_set_cursor(state.win, { HEADER_SIZE + 1, 0 })
-
-    -- 树占约 40% 高度（min 12 行）
-    local total_h = vim.o.lines
-    local tree_h  = math.max(12, math.floor(total_h * 0.38))
-    vim.api.nvim_win_set_height(state.win, tree_h)
-
-    -- 在树下方创建预览窗口
-    vim.cmd("belowright split")
-    state.preview_win = vim.api.nvim_get_current_win()
-    vim.wo[state.preview_win].number         = true
-    vim.wo[state.preview_win].relativenumber = false
-    vim.wo[state.preview_win].wrap           = false
-    vim.wo[state.preview_win].signcolumn     = "no"
-    vim.wo[state.preview_win].cursorline     = true
-
-    -- 焦点回到树窗口
-    vim.api.nvim_set_current_win(state.win)
+    create_windows(source_win, tree_h)
   end
 
-  -- 预览当前行
   update_preview(HEADER_SIZE + 1)
 end
 
--- 判断调用链侧边栏是否当前可见（供 <Leader>w 查询）
+-- ──────────────────────────────────────────────
+-- 供 <Leader>w 使用的接口
+-- ──────────────────────────────────────────────
 function M.is_open()
   return vim.api.nvim_win_is_valid(state.win)
       and vim.api.nvim_win_get_buf(state.win) == state.buf
 end
 
--- 用缓存的内容重新打开侧边栏（不重新发 LSP 请求，供 <Leader>w 恢复）
-function M.reopen()
-  if not vim.api.nvim_buf_is_valid(state.buf) then
-    vim.notify("gR: 没有保存的调用链，请重新按 gR", vim.log.levels.INFO)
-    return
-  end
-  if M.is_open() then return end  -- 已经打开了
-
-  local src = vim.api.nvim_win_is_valid(state.source_win)
-           and state.source_win or vim.fn.win_getid(1)
-  vim.api.nvim_set_current_win(src)
-
-  -- 重新创建树窗口
-  vim.cmd("botright 66vsplit")
-  state.win = vim.api.nvim_get_current_win()
-  vim.api.nvim_win_set_buf(state.win, state.buf)
-  vim.wo[state.win].winfixwidth    = true
-  vim.wo[state.win].number         = false
-  vim.wo[state.win].relativenumber = false
-  vim.wo[state.win].wrap           = false
-  vim.wo[state.win].signcolumn     = "no"
-  vim.wo[state.win].cursorline     = true
-
-  local tree_h = math.max(12, math.floor(vim.o.lines * 0.38))
-  vim.api.nvim_win_set_height(state.win, tree_h)
-
-  -- 重新创建预览窗口
-  vim.cmd("belowright split")
-  state.preview_win = vim.api.nvim_get_current_win()
-  vim.wo[state.preview_win].number         = true
-  vim.wo[state.preview_win].relativenumber = false
-  vim.wo[state.preview_win].wrap           = false
-  vim.wo[state.preview_win].signcolumn     = "no"
-  vim.wo[state.preview_win].cursorline     = true
-
-  vim.api.nvim_set_current_win(state.win)
-  -- 预览当前行（如果可以）
-  local cursor = pcall(function()
-    update_preview(vim.api.nvim_win_get_cursor(state.win)[1])
-  end)
-  _ = cursor
-end
-
--- 关闭侧边栏的所有窗口（供 <Leader>w 使用）
 function M.close_all()
   if vim.api.nvim_win_is_valid(state.preview_win) then
     pcall(vim.api.nvim_win_close, state.preview_win, false)
   end
   if vim.api.nvim_win_is_valid(state.win) then
     pcall(vim.api.nvim_win_close, state.win, false)
+  end
+end
+
+function M.reopen()
+  if not vim.api.nvim_buf_is_valid(state.buf) then
+    vim.notify("gR: 没有保存的调用链，请重新按 gR", vim.log.levels.INFO)
+    return
+  end
+  if M.is_open() then return end
+
+  local src = vim.api.nvim_win_is_valid(state.source_win)
+           and state.source_win or vim.fn.win_getid(1)
+
+  local buf_lines = vim.api.nvim_buf_get_lines(state.buf, 0, -1, false)
+  local tree_h = math.max(8, math.min(#buf_lines + 1, math.floor(vim.o.lines * 0.45)))
+  create_windows(src, tree_h)
+
+  -- 预览第一个有效条目
+  for i, e in ipairs(state.entries) do
+    if e.file then
+      vim.api.nvim_win_set_cursor(state.win, { i, 0 })
+      update_preview(i)
+      break
+    end
   end
 end
 
