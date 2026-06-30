@@ -62,6 +62,21 @@ local spaces = function()
 	return "spaces: " .. vim.api.nvim_buf_get_option(0, "shiftwidth")
 end
 
+-- jdtls 索引进度（Neovim 0.10+ 原生 LSP progress API）
+local lsp_progress = {
+  function()
+    local msg = vim.lsp.status()
+    if msg == "" then return "" end
+    -- 截短过长的消息
+    if #msg > 55 then msg = msg:sub(1, 52) .. "..." end
+    return "󰔟 " .. msg
+  end,
+  cond = function()
+    return vim.lsp.status() ~= ""
+  end,
+  color = { fg = "#ffbc67" },
+}
+
 lualine.setup({
 	options = {
 		icons_enabled = true,
@@ -74,7 +89,7 @@ lualine.setup({
 	sections = {
 		lualine_a = { branch, diagnostics },
 		lualine_b = { mode },
-		lualine_c = {},
+		lualine_c = { lsp_progress },
 		-- lualine_x = { "encoding", "fileformat", "filetype" },
 		lualine_x = { diff, spaces, "encoding", filetype },
 		lualine_y = { location },

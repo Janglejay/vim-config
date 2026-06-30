@@ -76,6 +76,36 @@ return {
           if dap_ok then
             require("jdtls").setup_dap({ hotcodereplace = "auto" })
           end
+
+          -- 索引刷新快捷键（Java buffer 内有效）
+          local o = { noremap = true, silent = true, buffer = bufnr }
+
+          -- <Leader>jr: 软刷新（pom.xml 变更后同步，不删 workspace）
+          vim.keymap.set("n", "<Leader>jr", function()
+            require("jdtls").update_project_config()
+            vim.notify("jdtls: 正在同步项目配置...", vim.log.levels.INFO)
+          end, vim.tbl_extend("force", o, { desc = "jdtls: Reload project config" }))
+
+          -- <Leader>jR: 全量重建索引（删除 workspace，重启 jdtls）
+          vim.keymap.set("n", "<Leader>jR", function()
+            local project_root = vim.fs.root(0, { "pom.xml", "build.gradle", ".git" })
+                              or vim.fn.getcwd()
+            local project_name = vim.fn.fnamemodify(project_root, ":t")
+            local workspace    = vim.fn.stdpath("data") .. "/jdtls-workspace/" .. project_name
+
+            vim.notify("jdtls: 正在清理 workspace，重建索引...", vim.log.levels.WARN)
+            -- 停止当前 jdtls 客户端
+            for _, client in ipairs(vim.lsp.get_clients({ name = "jdtls" })) do
+              client.stop()
+            end
+            -- 删除 workspace
+            vim.fn.delete(workspace, "rf")
+            -- 延迟重新 attach（等 jdtls 完全停止）
+            vim.defer_fn(function()
+              vim.cmd("edit")
+              vim.notify("jdtls: workspace 已清理，正在重新索引（需 1-3 分钟）", vim.log.levels.INFO)
+            end, 1500)
+          end, vim.tbl_extend("force", o, { desc = "jdtls: Full reindex (delete workspace)" }))
         end,
         capabilities = (function()
           local ok, cmp_lsp = pcall(require, "cmp_nvim_lsp")
