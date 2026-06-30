@@ -155,22 +155,21 @@ function M.open()
   end
 
   -- 添加说明行
-  local header = {
-    " Call Hierarchy: " .. root_items[1].name,
-    string.rep("─", 50),
-  }
-  local footer = {
-    string.rep("─", 50),
-    " <CR> 跳转  p/o 预览  q 关闭  gl 进入",
-  }
-  local all_lines = vim.list_extend(
-    vim.list_extend(header, lines), footer)
+  -- 注意：vim.list_extend 会原地修改第一个参数，所以先固定 header_size
+  local HEADER_SIZE = 2
+  local FOOTER_SIZE = 2
+  local all_lines = {}
+  table.insert(all_lines, " Call Hierarchy: " .. root_items[1].name)
+  table.insert(all_lines, string.rep("─", 50))
+  for _, l in ipairs(lines)  do table.insert(all_lines, l) end
+  table.insert(all_lines, string.rep("─", 50))
+  table.insert(all_lines, " <CR> 跳转  p/o 预览  q 关闭  gl 进入")
 
-  -- entries 偏移（header 占 2 行）
+  -- entries 偏移（header 占 HEADER_SIZE 行，footer 占 FOOTER_SIZE 行）
   local offset_entries = {}
-  for _ = 1, #header do table.insert(offset_entries, { file = nil, lnum = nil }) end
+  for _ = 1, HEADER_SIZE do table.insert(offset_entries, { file = nil, lnum = nil }) end
   for _, e in ipairs(entries) do table.insert(offset_entries, e) end
-  for _ = 1, #footer do table.insert(offset_entries, { file = nil, lnum = nil }) end
+  for _ = 1, FOOTER_SIZE do table.insert(offset_entries, { file = nil, lnum = nil }) end
 
   vim.bo[state.buf].modifiable = true
   vim.api.nvim_buf_set_lines(state.buf, 0, -1, false, all_lines)
@@ -190,7 +189,7 @@ function M.open()
 
   if existing then
     state.win = existing
-    vim.api.nvim_win_set_cursor(existing, { #header + 1, 0 })
+    vim.api.nvim_win_set_cursor(existing, { HEADER_SIZE + 1, 0 })
     vim.api.nvim_set_current_win(existing)
   else
     -- 保存到当前 source 窗口，用 botright vsplit 在最右边开
@@ -204,7 +203,7 @@ function M.open()
     vim.wo[state.win].wrap           = false
     vim.wo[state.win].signcolumn     = "no"
     vim.wo[state.win].cursorline     = true
-    vim.api.nvim_win_set_cursor(state.win, { #header + 1, 0 })
+    vim.api.nvim_win_set_cursor(state.win, { HEADER_SIZE + 1, 0 })
   end
 end
 
