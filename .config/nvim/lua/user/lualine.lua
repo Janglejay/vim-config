@@ -62,30 +62,46 @@ local spaces = function()
 	return "spaces: " .. vim.api.nvim_buf_get_option(0, "shiftwidth")
 end
 
--- jdtls 索引进度追踪
--- LspProgress 事件触发更新，确保状态栏实时反映索引进度
+-- jdtls 索引进度：双保险方案
+-- 1. LspProgress 事件（vim.schedule 确保主线程执行）
+-- 2. vim.lsp.status() 轮询（每秒刷新，兜底）
 local _lsp_msg = ""
 
 vim.api.nvim_create_autocmd("LspProgress", {
   callback = function(ev)
-    local client = vim.lsp.get_client_by_id(ev.data.client_id)
-    if not client then return end
-    local val = ev.data.params and ev.data.params.value or {}
-    if val.kind == "end" then
-      _lsp_msg = ""
-    else
-      local title = val.title or ""
-      local msg   = val.message or ""
-      local pct   = val.percentage and (" " .. val.percentage .. "%%") or ""
-      local text  = title .. (msg ~= "" and (": " .. msg) or "") .. pct
-      if text ~= "" then
-        _lsp_msg = "[" .. client.name .. "] " .. text
+    vim.schedule(function()
+      local client = vim.lsp.get_client_by_id(ev.data.client_id)
+      if not client then return end
+      local val = (ev.data.params or {}).value or {}
+      if val.kind == "end" then
+        _lsp_msg = ""
+      else
+        local title = val.title or ""
+        local msg   = val.message or ""
+        local pct   = val.percentage and (" " .. val.percentage .. "%") or ""
+        local text  = title .. (msg ~= "" and (": " .. msg) or "") .. pct
+        if text ~= "" then
+          _lsp_msg = client.name .. ": " .. text
+        end
       end
-    end
-    -- 强制 lualine 立即重绘
-    vim.cmd("redrawstatus")
+      pcall(vim.cmd, "redrawstatus")
+    end)
   end,
 })
+
+-- 兜底轮询：直接读 vim.lsp.status()（每秒检查一次）
+vim.defer_fn(function()
+  local timer = vim.uv.new_timer()
+  if timer then
+    timer:start(0, 1000, vim.schedule_wrap(function()
+      local s = vim.lsp.status()
+      if s ~= _lsp_msg then
+        _lsp_msg = s
+        pcall(vim.cmd, "redrawstatus")
+      end
+    end))
+  end
+end, 3000)
 
 local lsp_progress = {
   function()
