@@ -94,7 +94,6 @@ return {
     lazy = true,
   },
 
-  -- nvim-ts-autotag: Vue/JSX/HTML 标签自动关闭和重命名
   {
     "windwp/nvim-ts-autotag",
     event = { "BufReadPost", "BufNewFile" },
