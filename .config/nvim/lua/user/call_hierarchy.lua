@@ -114,10 +114,12 @@ local function open_in_source(entry, back_to_sidebar)
 end
 
 -- ──────────────────────────────────────────────
--- 创建窗口的公共函数（M.open 和 M.reopen 共用）
+-- 创建窗口：右侧栏 SIDEBAR_WIDTH 宽，树和预览各占 50%
 -- ──────────────────────────────────────────────
-local function create_windows(source_win, tree_h)
+local function create_windows(source_win)
   vim.api.nvim_set_current_win(source_win)
+
+  -- botright vsplit：右列撑满整个编辑器高度（不受其他分割影响）
   vim.cmd("botright " .. SIDEBAR_WIDTH .. "vsplit")
   state.win = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_buf(state.win, state.buf)
@@ -127,19 +129,21 @@ local function create_windows(source_win, tree_h)
   vim.wo[state.win].wrap           = false
   vim.wo[state.win].signcolumn     = "no"
   vim.wo[state.win].cursorline     = true
+
+  -- 树占整列高度的 50%（减去状态栏 2 行）
+  local total_h = vim.o.lines - 2
+  local tree_h  = math.floor(total_h * 0.5)
   vim.api.nvim_win_set_height(state.win, tree_h)
 
-  -- 在树下方创建预览窗口
-  -- 关键：先 split，再立刻 enew 创建独立 buffer
-  -- 否则预览窗口会共享树的 nofile buffer（导致 E21）
+  -- 预览窗口（下半部分，独立 buffer 避免 E21 modifiable 错误）
   vim.cmd("belowright split")
   state.preview_win = vim.api.nvim_get_current_win()
-  vim.cmd("enew")   -- 创建独立的可写 buffer
+  vim.cmd("enew")
   vim.bo[0].bufhidden = "wipe"
   vim.wo[state.preview_win].number         = true
   vim.wo[state.preview_win].relativenumber = false
   vim.wo[state.preview_win].wrap           = false
-  vim.wo[state.preview_win].signcolumn     = "yes:1"
+  vim.wo[state.preview_win].signcolumn     = "no"
   vim.wo[state.preview_win].cursorline     = true
 
   -- 焦点回到树窗口
@@ -244,9 +248,6 @@ function M.open()
   state.entries    = offset_entries
   state.source_win = source_win
 
-  -- 树高度：内容行数自适应（最少 8 行，最多屏幕 45%）
-  local tree_h = math.max(8, math.min(#all_lines + 1, math.floor(vim.o.lines * 0.45)))
-
   -- 检查侧边栏是否已打开
   local tree_win_open = vim.api.nvim_win_is_valid(state.win)
                      and vim.api.nvim_win_get_buf(state.win) == state.buf
@@ -255,7 +256,7 @@ function M.open()
     vim.api.nvim_win_set_cursor(state.win, { HEADER_SIZE + 1, 0 })
     vim.api.nvim_set_current_win(state.win)
   else
-    create_windows(source_win, tree_h)
+    create_windows(source_win)
   end
 
   update_preview(HEADER_SIZE + 1)
@@ -288,9 +289,7 @@ function M.reopen()
   local src = vim.api.nvim_win_is_valid(state.source_win)
            and state.source_win or vim.fn.win_getid(1)
 
-  local buf_lines = vim.api.nvim_buf_get_lines(state.buf, 0, -1, false)
-  local tree_h = math.max(8, math.min(#buf_lines + 1, math.floor(vim.o.lines * 0.45)))
-  create_windows(src, tree_h)
+  create_windows(src)
 
   -- 预览第一个有效条目
   for i, e in ipairs(state.entries) do
