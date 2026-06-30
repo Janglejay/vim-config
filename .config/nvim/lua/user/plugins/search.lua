@@ -43,28 +43,73 @@ return {
         end
 
         if jdtls_client then
-          -- lsp_live_workspace_symbols 发请求时需要 jdtls attach 到当前 buffer
-          -- 如果当前 buffer 不是 .java 文件，临时 attach，让请求可以发出
-          local bufnr = vim.api.nvim_get_current_buf()
-          local was_attached = vim.lsp.buf_is_attached(bufnr, jdtls_client.id)
-          if not was_attached then
-            pcall(vim.lsp.buf_attach_client, bufnr, jdtls_client.id)
+          -- 一次性拉取所有项目符号，过滤 Maven，用 fzf 本地模糊搜索
+          -- 优势：结果完全排除 .m2 依赖，fzf 客户端速度极快
+          local m2_path = vim.fn.expand("~") .. "/.m2/"
+          local kind_icons = {
+            [1]="󰙐 Text", [2]="󰆧 Method", [3]="󰊕 Function",
+            [4]=" Constructor", [5]="󰜢 Field", [6]="󰀫 Variable",
+            [7]="󰠱 Class", [8]="󰜰 Interface", [9]="󰏗 Module",
+            [10]="󰜢 Property", [13]="󰋺 Enum", [14]="󰌋 Keyword",
+            [21]=" Constant", [22]="󰙅 Struct", [25]="󰅲 TypeParam",
+          }
+
+          vim.notify("搜索符号中（过滤 Maven 依赖）...", vim.log.levels.INFO)
+
+          -- 用空 query 拉取所有项目符号（jdtls 会返回所有已索引的符号）
+          local ok, result = jdtls_client.request_sync(
+            "workspace/symbol", { query = "" }, 15000, 0)
+
+          if not ok or not result or not result.result then
+            vim.notify("符号查询失败或超时，退化为文件搜索", vim.log.levels.WARN)
+            fzf.files()
+            return
           end
 
-          fzf.lsp_live_workspace_symbols({
+          local entries   = {}
+          local entry_map = {}
+
+          for _, sym in ipairs(result.result) do
+            local uri  = (sym.location or {}).uri or ""
+            local path = vim.uri_to_fname(uri)
+            -- 跳过 Maven 依赖（.m2 目录）
+            if not path:find(m2_path, 1, true) then
+              local lnum  = ((sym.location.range or {}).start or {}).line or 0
+              local fname = vim.fn.fnamemodify(path, ":~:.")
+              local icon  = kind_icons[sym.kind] or "  Symbol"
+              local display = string.format("%-45s %-16s %s:%d",
+                sym.name, icon, fname, lnum + 1)
+              table.insert(entries, display)
+              entry_map[display] = { file = path, lnum = lnum + 1 }
+            end
+          end
+
+          if #entries == 0 then
+            vim.notify("项目中没有找到符号（索引可能未完成）", vim.log.levels.WARN)
+            return
+          end
+
+          fzf.fzf_exec(entries, {
+            prompt  = "SearchEverywhere❯ ",
             winopts = {
-              title  = " Search: 类·方法·字段·文件名 ",
-              height = 0.85, width = 0.90,
+              title  = string.format(" 项目符号 (%d 个，已过滤 Maven) ", #entries),
+              height = 0.85, width = 0.92,
               preview = { layout = "vertical", vertical = "down:45%" },
             },
+            fzf_opts = { ["--tiebreak"] = "begin" },
+            previewer = "builtin",
+            actions = {
+              ["default"] = function(selected)
+                if not selected or not selected[1] then return end
+                local info = entry_map[selected[1]]
+                if info then
+                  vim.cmd("edit " .. vim.fn.fnameescape(info.file))
+                  pcall(vim.api.nvim_win_set_cursor, 0, { info.lnum, 0 })
+                  vim.cmd("normal! zz")
+                end
+              end,
+            },
           })
-
-          -- 查询结束后（fzf 关闭），如果是临时 attach 就 detach 还原
-          if not was_attached then
-            vim.defer_fn(function()
-              pcall(vim.lsp.buf_detach_client, bufnr, jdtls_client.id)
-            end, 100)
-          end
         else
           -- jdtls 未就绪：检测是否是 Java 项目，如果是则尝试启动
           local triggered = _G.start_jdtls_for_project and _G.start_jdtls_for_project()
