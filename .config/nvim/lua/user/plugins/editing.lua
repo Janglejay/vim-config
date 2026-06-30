@@ -5,11 +5,17 @@ return {
     build = ":TSUpdate",
     event = { "BufReadPost", "BufNewFile" },
     config = function()
-      -- 新版 nvim-treesitter 只接受 install_dir 配置
-      -- 高亮/缩进由 Neovim 0.10+ 原生 treesitter 支持自动处理
       require("nvim-treesitter").setup()
 
-      -- 确保常用解析器已安装（异步，不阻塞启动）
+      -- 新版 nvim-treesitter 不再自动为 buffer 启动 treesitter 解析树。
+      -- 必须手动调用 vim.treesitter.start()，否则 J/K textobjects 查询无解析树可用。
+      vim.api.nvim_create_autocmd("FileType", {
+        callback = function(args)
+          pcall(vim.treesitter.start, args.buf)
+        end,
+      })
+
+      -- 确保常用解析器已安装（异步）
       vim.defer_fn(function()
         pcall(function()
           require("nvim-treesitter.install").install({
