@@ -31,22 +31,27 @@ return {
       -- 结果中显示的文件名列也可在 fzf 里直接输入搜索（如 "OrderService.java"）
       -- jdtls 未就绪时自动退化为文件搜索
       vim.keymap.set("n", "<Leader>f", function()
-        local has_lsp = vim.tbl_filter(function(c)
-          return c.server_capabilities.workspaceSymbolProvider == true
-        end, vim.lsp.get_clients({ bufnr = 0 }))
+        -- 检查 jdtls 是否全局运行（不限制 bufnr，因为非 Java 文件也需要搜索）
+        -- workspaceSymbolProvider 在 jdtls 里是 table 不是 true，用 ~= nil 判断
+        local jdtls_ready = vim.tbl_filter(function(c)
+          return c.name == "jdtls"
+              and c.server_capabilities.workspaceSymbolProvider ~= nil
+              and c.server_capabilities.workspaceSymbolProvider ~= false
+        end, vim.lsp.get_clients())   -- 不加 bufnr，全局查
 
-        if #has_lsp > 0 then
+        if #jdtls_ready > 0 then
           fzf.lsp_live_workspace_symbols({
             winopts = {
-              title  = " Search: 类·方法·字段·文件名 (jdtls) ",
+              title  = " Search: 类·方法·字段·文件名 ",
               height = 0.85, width = 0.90,
               preview = { layout = "vertical", vertical = "down:45%" },
             },
           })
         else
-          -- jdtls 未就绪，退化为文件名搜索
-          vim.notify("jdtls 未就绪，当前只搜文件名（等索引完成后重试）", vim.log.levels.WARN)
-          fzf.files()
+          -- jdtls 未就绪（红色进度条），退化为文件名搜索
+          fzf.files({
+            winopts = { title = " Files (jdtls 未就绪，索引完成后可搜符号) " }
+          })
         end
       end, vim.tbl_extend("force", opts, { desc = "SearchEverywhere" }))
 
