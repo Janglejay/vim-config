@@ -1,59 +1,89 @@
 return {
-  -- Treesitter 核心 + textobjects（J/K 方法跳转）
+  -- Treesitter 核心（新版 API：只管解析器安装，高亮由 Neovim 原生处理）
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     event = { "BufReadPost", "BufNewFile" },
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter-textobjects",
-      "JoosepAlviste/nvim-ts-context-commentstring",
-    },
     config = function()
-      require("nvim-treesitter.configs").setup({
-        ensure_installed = {
-          "java", "lua", "python", "rust", "go",
-          "json", "yaml", "toml", "xml", "markdown",
-          "bash", "regex",
-        },
-        auto_install = true,
-        highlight = { enable = true },
-        indent    = { enable = true },
-        textobjects = {
-          move = {
-            enable = true,
-            set_jumps = true,
-            goto_next_start     = { ["J"] = { query = "@function.outer", desc = "MethodDown" } },
-            goto_previous_start = { ["K"] = { query = "@function.outer", desc = "MethodUp" } },
-          },
-          select = {
-            enable   = true,
-            lookahead = true,
-            keymaps  = {
-              ["af"] = "@function.outer",
-              ["if"] = "@function.inner",
-              ["ac"] = "@class.outer",
-              ["ic"] = "@class.inner",
-              ["aa"] = "@parameter.outer",
-              ["ia"] = "@parameter.inner",
-            },
-          },
-        },
-      })
+      -- 新版 nvim-treesitter 只接受 install_dir 配置
+      -- 高亮/缩进由 Neovim 0.10+ 原生 treesitter 支持自动处理
+      require("nvim-treesitter").setup()
+
+      -- 确保常用解析器已安装（异步，不阻塞启动）
+      vim.defer_fn(function()
+        pcall(function()
+          require("nvim-treesitter.install").install({
+            "java", "lua", "python", "rust", "go",
+            "json", "yaml", "toml", "xml", "markdown", "bash",
+          })
+        end)
+      end, 100)
     end,
   },
 
-  -- flash.nvim: AceJump 替代
+  -- nvim-treesitter-textobjects（新版 API）
+  {
+    "nvim-treesitter/nvim-treesitter-textobjects",
+    event = { "BufReadPost", "BufNewFile" },
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    config = function()
+      -- 全局选项
+      require("nvim-treesitter-textobjects").setup({
+        move   = { set_jumps = true },
+        select = { lookahead = true },
+      })
+
+      local move = require("nvim-treesitter-textobjects.move")
+      local o    = { noremap = true, silent = true }
+
+      -- J: MethodDown（跳到下一个函数/方法开头）
+      vim.keymap.set("n", "J", function()
+        move.goto_next_start("@function.outer")
+      end, vim.tbl_extend("force", o, { desc = "MethodDown" }))
+
+      -- K: MethodUp（跳到上一个函数/方法开头）
+      vim.keymap.set("n", "K", function()
+        move.goto_previous_start("@function.outer")
+      end, vim.tbl_extend("force", o, { desc = "MethodUp" }))
+
+      -- 文本对象（select 模式）
+      local select = require("nvim-treesitter-textobjects.select")
+      local sel_o  = { noremap = true, silent = true }
+
+      local textobjects = {
+        ["af"] = "@function.outer",
+        ["if"] = "@function.inner",
+        ["ac"] = "@class.outer",
+        ["ic"] = "@class.inner",
+        ["aa"] = "@parameter.outer",
+        ["ia"] = "@parameter.inner",
+      }
+      for key, query in pairs(textobjects) do
+        vim.keymap.set({ "x", "o" }, key, function()
+          select.select_textobject(query, "textobjects")
+        end, sel_o)
+      end
+    end,
+  },
+
+  -- flash.nvim: AceJump 替代（f/F）
   {
     "folke/flash.nvim",
     event = "VeryLazy",
     opts = {
       modes = {
-        char = { enabled = false },  -- 禁用 f/t 原生行为覆盖，保留 flash 自身的 jump
+        char = { enabled = false },
       },
     },
     keys = {
       { "f", mode = { "n", "x", "o" }, function() require("flash").jump() end,       desc = "AceAction (Flash Jump)" },
       { "F", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "AceTargetAction (Flash Treesitter)" },
     },
+  },
+
+  -- nvim-ts-context-commentstring（注释上下文感知）
+  {
+    "JoosepAlviste/nvim-ts-context-commentstring",
+    lazy = true,
   },
 }
