@@ -3,6 +3,12 @@
 #
 # 使用方法：
 #   手动运行: bash ~/.config/nvim/scripts/prewarm-jdtls.sh
+#   （每次运行自动清空上次日志）
+
+# 日志文件：每次运行前自动清空（不使用 >> 追加，避免无限增长）
+LOG_FILE="$HOME/prewarm-jdtls.log"
+: > "$LOG_FILE"             # 清空旧日志
+exec > >(tee -a "$LOG_FILE") 2>&1   # 同时输出到终端和日志文件
 #   定时任务: crontab -e → 0 12 * * 1,3,5 bash ~/.config/nvim/scripts/prewarm-jdtls.sh >> ~/prewarm-jdtls.log 2>&1
 
 set -euo pipefail
@@ -135,7 +141,7 @@ del_running() { rm -f "$TMPDIR_CNT/running_$(_safe_name "$1")"; }
 run_monitor() {
   local total=$1
   while true; do
-    sleep 30
+    sleep 5
     local done=$(( $(cnt_get warmed) + $(cnt_get skipped) ))
     local ts; ts=$(date '+%H:%M:%S')
     echo ""
@@ -242,10 +248,11 @@ LUAEOF
     local session_name="jdtls-${project_name:0:30}"
     tmux kill-session -t "$session_name" 2>/dev/null || true
     tmux new-session -d -s "$session_name" "bash -c \"$nvim_cmd\"" 2>/dev/null || true
+    set_running "$project_name" "0"   # 立即注册，让 monitor 5s 内就能看到
 
     local elapsed=0
     while tmux has-session -t "$session_name" 2>/dev/null; do
-      sleep 10; elapsed=$((elapsed + 10))
+      sleep 5; elapsed=$((elapsed + 5))
       # 有超时：超时后强制关闭
       if [ "${WAIT_PER_PROJECT:-0}" -gt 0 ] && [ $elapsed -ge "$WAIT_PER_PROJECT" ]; then
         warn "$project_name 超时 ${WAIT_PER_PROJECT}s，强制关闭（增量缓存已保留）"
