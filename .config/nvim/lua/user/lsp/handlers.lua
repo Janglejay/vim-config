@@ -87,7 +87,8 @@ local function lsp_keymaps(bufnr)
     end
 
     if at_def then
-      fzf.lsp_references()          -- 定义处 → 显示引用
+      -- vim.schedule 推迟到下个事件循环，避免 buf_request_sync 后状态不一致导致 fzf-lua crash
+      vim.schedule(function() fzf.lsp_references() end)
     elseif #defs == 1 then
       local d   = defs[1]
       local uri = d.uri or d.targetUri
