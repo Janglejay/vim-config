@@ -29,6 +29,9 @@ cleanup() {
   echo ""
   warn "释放资源..."
 
+  # 0. 先停止 monitor 进程（避免它继续输出干扰清理过程）
+  kill "${MONITOR_PID:-}" 2>/dev/null || true
+
   # 1. 发送 SIGTERM 给所有后台子进程（含进程组）
   for pid in "${pids[@]+"${pids[@]}"}"; do
     # 尝试终止整个进程组（避免孤儿进程）
@@ -155,7 +158,7 @@ run_monitor() {
       local raw; raw=$(basename "$f")
       local name="${raw#running_}"    # 去掉前缀
       local elapsed; elapsed=$(cat "$f" 2>/dev/null || echo 0)
-      local proj_bar; proj_bar=$(draw_bar "$elapsed" "$WAIT_PER_PROJECT" 18)
+      local proj_bar; proj_bar=$(draw_bar "$elapsed" "$WAIT_PER_PROJECT" 20)
       # 读取 jdtls 真实进度消息（由 nvim Lua 写入）
       local real_prog="等待 jdtls..."
       local prog_file="$TMPDIR_CNT/progress_$name"
@@ -205,7 +208,7 @@ process_project() {
   #   2. 索引完成（kind="end"）时标记，超时后 qa!
   local lua_file="$TMPDIR_CNT/auto_quit_$$.lua"
   local progress_file="$TMPDIR_CNT/progress_$(_safe_name "$project_name")"
-  local timeout_ms=$(( WAIT_PER_PROJECT * 1000 ))
+  local timeout_ms=$(( WAIT_PER_PROJECT > 0 ? WAIT_PER_PROJECT * 1000 : 86400000 ))
 
   cat > "$lua_file" << LUAEOF
 -- jdtls 实时进度跟踪：把 LspProgress 消息写到文件，供 monitor 进程读取
@@ -330,7 +333,6 @@ pids=()   # 后台子进程 PID 列表
 
 for project_dir in "$PROJECTS_DIR"/*/; do
   [ -d "$project_dir" ] || continue
-  local_name=$(basename "$project_dir")
 
   # 快速过滤非 Java 项目（不进子进程，避免 overhead）
   if [ ! -f "$project_dir/pom.xml" ] && [ ! -f "$project_dir/build.gradle" ]; then

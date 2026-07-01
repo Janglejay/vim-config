@@ -1,94 +1,69 @@
 local M = {}
 
--- TODO: backfill this to template
+-- ── 诊断配置 ────────────────────────────────────────────────────
 M.setup = function()
   local signs = {
-    { name = "DiagnosticSignError", text = "" },
-    { name = "DiagnosticSignWarn", text = "" },
-    { name = "DiagnosticSignHint", text = "" },
-    { name = "DiagnosticSignInfo", text = "" },
+    { name = "DiagnosticSignError", text = "" },
+    { name = "DiagnosticSignWarn",  text = "" },
+    { name = "DiagnosticSignHint",  text = "" },
+    { name = "DiagnosticSignInfo",  text = "" },
   }
-
   for _, sign in ipairs(signs) do
     vim.fn.sign_define(sign.name, { texthl = sign.name, text = sign.text, numhl = "" })
   end
 
-  local config = {
-    -- disable virtual text
-    virtual_text = false,
-    -- show signs
-    signs = {
-      active = signs,
-    },
+  vim.diagnostic.config({
+    virtual_text    = false,
+    signs           = { active = signs },
     update_in_insert = true,
-    underline = true,
-    severity_sort = true,
+    underline       = true,
+    severity_sort   = true,
     float = {
-      focusable = false,
-      style = "minimal",
-      border = "rounded",
-      source = "always",
-      header = "",
-      prefix = "",
+      focusable = false, style = "minimal", border = "rounded",
+      source = "always", header = "", prefix = "",
     },
-  }
+  })
 
-  vim.diagnostic.config(config)
-
-  -- Neovim 0.11+: vim.lsp.with is deprecated, use direct handler assignment with wrapper
-  local orig_hover = vim.lsp.handlers.hover
-  vim.lsp.handlers.hover = function(err, result, ctx, config)
-    config = config or {}
-    config.border = config.border or "rounded"
-    return orig_hover(err, result, ctx, config)
+  -- Hover / signature_help 圆角边框
+  local function wrap_with_border(handler)
+    return function(err, result, ctx, cfg)
+      cfg = vim.tbl_extend("force", cfg or {}, { border = "rounded" })
+      handler(err, result, ctx, cfg)
+    end
   end
-
-  local orig_signature = vim.lsp.handlers.signature_help
-  vim.lsp.handlers.signature_help = function(err, result, ctx, config)
-    config = config or {}
-    config.border = config.border or "rounded"
-    return orig_signature(err, result, ctx, config)
-  end
+  vim.lsp.handlers.hover         = wrap_with_border(vim.lsp.handlers.hover)
+  vim.lsp.handlers.signature_help = wrap_with_border(vim.lsp.handlers.signature_help)
 end
 
+-- ── 文档高亮（光标停留高亮同名符号）──────────────────────────────
 local function lsp_highlight_document(client)
-  local caps = client.server_capabilities
-  if caps and caps.documentHighlightProvider then
-    vim.api.nvim_exec(
-      [[
-      augroup lsp_document_highlight
-        autocmd! * <buffer>
-        autocmd CursorHold <buffer> lua vim.lsp.buf.document_highlight()
-        autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
-      augroup END
-    ]] ,
-      false
-    )
-  end
+  if not (client.server_capabilities or {}).documentHighlightProvider then return end
+  local grp = vim.api.nvim_create_augroup("lsp_doc_highlight", { clear = true })
+  vim.api.nvim_create_autocmd("CursorHold",  { group = grp, buffer = 0,
+    callback = vim.lsp.buf.document_highlight })
+  vim.api.nvim_create_autocmd("CursorMoved", { group = grp, buffer = 0,
+    callback = vim.lsp.buf.clear_references })
 end
 
+-- ── Buffer 快捷键 ────────────────────────────────────────────────
 local function lsp_keymaps(bufnr)
-  local opts = { noremap = true, silent = true }
-  local bopts = { noremap = true, silent = true, buffer = bufnr }
+  local o = { noremap = true, silent = true, buffer = bufnr }
 
-  -- gD: 跳到声明（Declaration，比 Definition 更原始）
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", opts)
+  -- gD: 跳到声明
+  vim.keymap.set("n", "gD", vim.lsp.buf.declaration, vim.tbl_extend("force", o, { desc = "Declaration" }))
 
-  -- gd: 上下文感知（IDEA 风格）
+  -- gd: 上下文感知（IDEA Cmd+B 风格）
   --   • 在引用处 → 跳到定义
-  --   • 在定义处 → 显示所有引用（含属性/字段引用）
+  --   • 在定义处 → 显示所有引用（支持字段/属性/Lombok 生成的 getter/setter）
   vim.keymap.set("n", "gd", function()
-    -- 移除严格的 definitionProvider 预检查（经常误报"加载中"）
-    -- 改为：有任意 LSP 客户端就尝试调用，Neovim 原生会处理不可用的情况
     if #vim.lsp.get_clients({ bufnr = 0 }) == 0 then
       vim.notify("LSP 未连接，打开 .java 文件触发 jdtls 启动", vim.log.levels.WARN)
       return
     end
-    local fzf = require("fzf-lua")
+    local fzf    = require("fzf-lua")
     local params = vim.lsp.util.make_position_params()
-
-    -- 查询定义位置（10s 超时，jdtls 加载缓存时可能较慢）
     local def_res = vim.lsp.buf_request_sync(0, "textDocument/definition", params, 10000)
+
     local defs = {}
     if def_res then
       for _, res in pairs(def_res) do
@@ -98,26 +73,22 @@ local function lsp_keymaps(bufnr)
       end
     end
 
-    -- 判断光标是否在定义处
+    -- 判断是否在定义处（严格匹配行号，不用 abs <= 1 防误判）
     local cur_uri  = vim.uri_from_bufnr(0)
-    local cur_line = vim.api.nvim_win_get_cursor(0)[1] - 1  -- 0-indexed
-
-    local at_def = (#defs == 0)  -- 没有找到定义 → 本身就是定义
+    local cur_line = vim.api.nvim_win_get_cursor(0)[1] - 1
+    local at_def   = (#defs == 0)  -- 无定义 → 本身就是定义
     for _, d in ipairs(defs) do
       local uri  = d.uri or d.targetUri or ""
       local line = (d.range and d.range.start.line)
                 or (d.targetRange and d.targetRange.start.line) or -1
-      if uri == cur_uri and math.abs(line - cur_line) <= 1 then
-        at_def = true
-        break
+      if uri == cur_uri and line == cur_line then
+        at_def = true; break
       end
     end
 
     if at_def then
-      -- 在定义处 → 显示引用（属性/方法均适用）
-      fzf.lsp_references()
+      fzf.lsp_references()          -- 定义处 → 显示引用
     elseif #defs == 1 then
-      -- 只有一个定义 → 直接跳转
       local d   = defs[1]
       local uri = d.uri or d.targetUri
       local ln  = ((d.range and d.range.start.line)
@@ -128,50 +99,31 @@ local function lsp_keymaps(bufnr)
       vim.api.nvim_win_set_cursor(0, { ln, col })
       vim.cmd("normal! zz")
     else
-      -- 多个定义 → fzf 选择
-      fzf.lsp_definitions()
+      fzf.lsp_definitions()          -- 多定义 → fzf 选择
     end
-  end, vim.tbl_extend("force", bopts, { desc = "gd: smart goto (def→refs, ref→def)" }))
+  end, vim.tbl_extend("force", o, { desc = "gd: smart goto" }))
 
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-p>", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
-  -- gi: buffer-local（fzf-lua 全局映射的 buffer-local 备份，保证 LSP attach 后即可用）
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "gi",
-    "<cmd>lua require('fzf-lua').lsp_implementations()<CR>", opts)
-  -- vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-p>", "<cmd>lua vim.lsp.buf.document_symbol()<CR>", opts)
-  -- vim.api.nvim_buf_set_keymap(bufnr, "n", "<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<Leader>R", "<cmd>lua vim.lsp.buf.rename()<CR>", opts)
-  -- vim.api.nvim_buf_set_keymap(bufnr, "n", "gr", "<cmd>lua vim.lsp.buf.references()<CR>", opts)
-  -- vim.api.nvim_buf_set_keymap(bufnr, "n", "gr", "<cmd>Telescope lsp_references<CR>", opts)  -- replaced by fzf-lua
-  -- vim.api.nvim_buf_set_keymap(bufnr, "n", "<c-y>", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "ga", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "se", "<cmd>lua vim.diagnostic.open_float()<CR>", opts)
-  -- vim.api.nvim_buf_set_keymap(bufnr, "n", "<S-F2>", '<cmd>lua vim.diagnostic.goto_prev({ border = "rounded" })<CR>', opts)
-  -- vim.api.nvim_buf_set_keymap(
-  --   bufnr,
-  --   "n",
-  --   "se",
-  --   '<cmd>lua vim.lsp.diagnostic.show_line_diagnostics({ border = "rounded" })<CR>',
-  --   opts
-  -- )
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<F2>", '<cmd>lua vim.diagnostic.goto_next({ border = "rounded" })<CR>', opts)
-  --  vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>q", "<cmd>lua vim.diagnostic.setloclist()<CR>", opts)
-  --  vim.cmd [[ command! Format execute 'lua vim.lsp.buf.formatting()' ]]
+  -- 其他 LSP 快捷键
+  vim.keymap.set("n", "<c-p>",    vim.lsp.buf.hover,        vim.tbl_extend("force", o, { desc = "Hover" }))
+  vim.keymap.set("n", "gi",      "<cmd>lua require('fzf-lua').lsp_implementations()<CR>", o)
+  vim.keymap.set("n", "<Leader>R", vim.lsp.buf.rename,      vim.tbl_extend("force", o, { desc = "Rename" }))
+  vim.keymap.set("n", "ga",      vim.lsp.buf.code_action,   vim.tbl_extend("force", o, { desc = "Code Action" }))
+  vim.keymap.set("n", "se",      vim.diagnostic.open_float, vim.tbl_extend("force", o, { desc = "Show Diagnostic" }))
+  vim.keymap.set("n", "<F2>",    function()
+    vim.diagnostic.goto_next({ float = { border = "rounded" } })
+  end, vim.tbl_extend("force", o, { desc = "Next Diagnostic" }))
 end
 
+-- ── on_attach ────────────────────────────────────────────────────
 M.on_attach = function(client, bufnr)
   lsp_keymaps(bufnr)
   lsp_highlight_document(client)
 end
 
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-
-local status_ok, cmp_nvim_lsp = pcall(require, "cmp_nvim_lsp")
-if not status_ok then
-  return
-end
-
--- M.capabilities = cmp_nvim_lsp.update_capabilities(capabilities)
-M.capabilities = cmp_nvim_lsp.default_capabilities()
-
+-- ── capabilities（修复：cmp 失败时不再 return nil）──────────────
+local ok, cmp_lsp = pcall(require, "cmp_nvim_lsp")
+M.capabilities = ok
+  and cmp_lsp.default_capabilities()
+  or  vim.lsp.protocol.make_client_capabilities()
 
 return M
