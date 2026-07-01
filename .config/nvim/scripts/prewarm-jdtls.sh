@@ -12,6 +12,9 @@ JDTLS_CACHE="$HOME/Library/Caches/jdtls"   # jdtls（Mason wrapper）实际的 w
 WAIT_PER_PROJECT=360   # 每个项目最多等 6 分钟
 MAX_JOBS=2             # 最多同时跑几个 jdtls（内存限制，建议不超过 2）
 FORCE_REBUILD=false
+# 提供 PTY 的方式：tmux（默认）或 script（macOS 内置，不需要额外安装）
+# 改为 script 时设为 false
+USE_TMUX=true
 
 # 颜色输出
 GREEN='\033[0;32m' YELLOW='\033[1;33m' RED='\033[0;31m' NC='\033[0m'
@@ -64,27 +67,47 @@ process_project() {
 
   warn "$project_name → 构建索引中（最多 ${WAIT_PER_PROJECT}s）..."
 
-  local session_name="jdtls-${project_name:0:30}"
-  tmux kill-session -t "$session_name" 2>/dev/null || true
-
   local ws_before; ws_before=$(ls "$JDTLS_CACHE" 2>/dev/null | wc -l | tr -d ' ')
+  local nvim_cmd="cd '$project_dir' && nvim \
+    -c 'lua vim.defer_fn(function() vim.cmd(\"qa!\") end, $((WAIT_PER_PROJECT * 1000)))' \
+    '$java_file'"
+  local nvim_pid=""
 
-  # 在独立 tmux session 里开 nvim，触发 jdtls 通过 FileType=java 加载
-  tmux new-session -d -s "$session_name" \
-    "cd '$project_dir' && nvim \
-      -c 'lua vim.defer_fn(function() vim.cmd(\"qa!\") end, $((WAIT_PER_PROJECT * 1000)))' \
-      '$java_file'" 2>/dev/null || true
+  if [ "${USE_TMUX:-true}" = true ] && command -v tmux &>/dev/null; then
+    # ── 方案 A：tmux（默认，cron 环境最稳定）──────────────────────
+    local session_name="jdtls-${project_name:0:30}"
+    tmux kill-session -t "$session_name" 2>/dev/null || true
+    tmux new-session -d -s "$session_name" "bash -c $'$nvim_cmd'" 2>/dev/null || true
 
-  # 等待 nvim session 结束（或超时强制关闭）
-  local elapsed=0
-  while tmux has-session -t "$session_name" 2>/dev/null; do
-    sleep 10; elapsed=$((elapsed + 10))
-    if [ $elapsed -ge $WAIT_PER_PROJECT ]; then
-      tmux kill-session -t "$session_name" 2>/dev/null || true
-      break
-    fi
-    [ $((elapsed % 60)) -eq 0 ] && echo "    [$project_name] ${elapsed}s/${WAIT_PER_PROJECT}s ..."
-  done
+    local elapsed=0
+    while tmux has-session -t "$session_name" 2>/dev/null; do
+      sleep 10; elapsed=$((elapsed + 10))
+      if [ $elapsed -ge $WAIT_PER_PROJECT ]; then
+        tmux kill-session -t "$session_name" 2>/dev/null || true; break
+      fi
+      [ $((elapsed % 60)) -eq 0 ] && echo "    [$project_name] ${elapsed}s/${WAIT_PER_PROJECT}s ..."
+    done
+
+  else
+    # ── 方案 B：script（macOS 内置 PTY，不需要 tmux）──────────────
+    # script -q /dev/null 分配伪终端，nvim 可正常启动
+    # timeout 限制最长运行时间
+    (
+      cd "$project_dir"
+      script -q /dev/null \
+        timeout "$WAIT_PER_PROJECT" \
+        nvim -c "lua vim.defer_fn(function() vim.cmd('qa!') end, $((WAIT_PER_PROJECT * 1000)))" \
+        "$java_file"
+    ) >/dev/null 2>&1 &
+    nvim_pid=$!
+
+    local elapsed=0
+    while kill -0 "$nvim_pid" 2>/dev/null; do
+      sleep 10; elapsed=$((elapsed + 10))
+      [ $((elapsed % 60)) -eq 0 ] && echo "    [$project_name] ${elapsed}s/${WAIT_PER_PROJECT}s ..."
+    done
+    wait "$nvim_pid" 2>/dev/null || true
+  fi
 
   # 结果判断
   local ws_after; ws_after=$(ls "$JDTLS_CACHE" 2>/dev/null | wc -l | tr -d ' ')
@@ -99,13 +122,15 @@ process_project() {
 # ──────────────────────────────────────────────────────────────
 # 主流程：并行处理，最多 MAX_JOBS 个并发
 # ──────────────────────────────────────────────────────────────
-if ! command -v tmux &>/dev/null; then
-  err "需要 tmux，请先: brew install tmux"; exit 1
+if [ "${USE_TMUX:-true}" = true ] && ! command -v tmux &>/dev/null; then
+  warn "未找到 tmux，自动切换为 script 模式（macOS 内置，无需安装）"
+  USE_TMUX=false
 fi
 
 START_TIME=$(date '+%H:%M')
+PTY_MODE=$( [ "${USE_TMUX:-true}" = true ] && echo "tmux" || echo "script" )
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  jdtls 预热脚本 — 并行 ${MAX_JOBS} 个项目"
+echo "  jdtls 预热脚本 — 并行 ${MAX_JOBS} 个项目  [PTY: $PTY_MODE]"
 echo "  目录: $PROJECTS_DIR  |  开始: ${START_TIME}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
