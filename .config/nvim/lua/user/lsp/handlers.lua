@@ -118,6 +118,18 @@ end
 M.on_attach = function(client, bufnr)
   lsp_keymaps(bufnr)
   lsp_highlight_document(client)
+
+  -- Inlay hints（内联类型/参数名提示，Neovim 0.10+ 原生支持）
+  -- 效果：orderService.create(userId: id, quantity: 3) ← 灰色的是提示
+  if client.server_capabilities.inlayHintProvider then
+    vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+    -- <Leader>ih 切换显示/隐藏（提示太多时可临时关掉）
+    vim.keymap.set("n", "<Leader>ih", function()
+      local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr })
+      vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
+      vim.notify("Inlay hints " .. (enabled and "关闭" or "开启"), vim.log.levels.INFO)
+    end, { noremap = true, silent = true, buffer = bufnr, desc = "Toggle inlay hints" })
+  end
 end
 
 -- ── capabilities（修复：cmp 失败时不再 return nil）──────────────
