@@ -140,7 +140,7 @@ run_monitor() {
     local ts; ts=$(date '+%H:%M:%S')
     echo ""
     printf "  -- %s 进度快照 " "$ts"
-    printf -- '-%.0s' $(seq 1 40); echo ""
+    printf '%60s\n' '' | tr ' ' '-'
 
     # 每个正在运行的项目单独一行：项目名 + 时间进度条
     local running=0
@@ -166,7 +166,7 @@ run_monitor() {
     local overall; overall=$(draw_bar "$done" "$total" 20)
     printf "  整体: %s  完成%d 运行%d 待处理%d\n" \
       "$overall" "$done" "$running" "$(( total - done - running ))"
-    printf '  -%.0s' $(seq 1 44); echo ""
+    printf '%60s\n' '' | tr ' ' '-'
   done
 }
 
