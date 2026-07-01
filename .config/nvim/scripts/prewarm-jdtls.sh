@@ -151,14 +151,12 @@ run_monitor() {
       local elapsed; elapsed=$(cat "$f" 2>/dev/null || echo 0)
       local proj_bar; proj_bar=$(draw_bar "$elapsed" "$WAIT_PER_PROJECT" 18)
       # 读取 jdtls 真实进度消息（由 nvim Lua 写入）
-      local real_prog=""
+      local real_prog="等待 jdtls..."
       local prog_file="$TMPDIR_CNT/progress_$name"
-      [ -f "$prog_file" ] && real_prog=$(cat "$prog_file" 2>/dev/null || echo "")
-      if [ -n "$real_prog" ]; then
-        printf "  %-30s %s %4ds  >> %s\n" "$name" "$proj_bar" "$elapsed" "$real_prog"
-      else
-        printf "  %-30s %s %4ds  (等待 jdtls 启动...)\n" "$name" "$proj_bar" "$elapsed"
-      fi
+      [ -f "$prog_file" ] && real_prog=$(cat "$prog_file" 2>/dev/null || echo "等待 jdtls...")
+      # 截断长名称避免 printf 格式溢出
+      local short_name="${name:0:28}"
+      printf "  %-28.28s %s %4ds  %s\n" "$short_name" "$proj_bar" "$elapsed" "$real_prog"
       running=$((running + 1))
     done
 
