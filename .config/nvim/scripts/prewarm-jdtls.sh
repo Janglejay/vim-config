@@ -139,8 +139,8 @@ run_monitor() {
     local done=$(( $(cnt_get warmed) + $(cnt_get skipped) ))
     local ts; ts=$(date '+%H:%M:%S')
     echo ""
-    printf "  ── %s 进度快照 " "$ts"
-    printf '─%.0s' $(seq 1 40); echo ""
+    printf "  -- %s 进度快照 " "$ts"
+    printf -- '-%.0s' $(seq 1 40); echo ""
 
     # 每个正在运行的项目单独一行：项目名 + 时间进度条
     local running=0
@@ -149,8 +149,9 @@ run_monitor() {
       local raw; raw=$(basename "$f")
       local name="${raw#running_}"    # 去掉前缀
       local elapsed; elapsed=$(cat "$f" 2>/dev/null || echo 0)
-      local proj_bar; proj_bar=$(draw_bar "$elapsed" "$WAIT_PER_PROJECT" 20)
-      printf "  %-36s %s  %4ss / %ss\n" \
+      local pct=$(( elapsed * 100 / WAIT_PER_PROJECT ))
+      local proj_bar; proj_bar=$(draw_bar "$elapsed" "$WAIT_PER_PROJECT" 22)
+      printf "  %-35s %s  %ds/%ds\n" \
         "$name" "$proj_bar" "$elapsed" "$WAIT_PER_PROJECT"
       running=$((running + 1))
     done
@@ -161,7 +162,7 @@ run_monitor() {
     local overall; overall=$(draw_bar "$done" "$total" 20)
     printf "  整体: %s  完成%d 运行%d 待处理%d\n" \
       "$overall" "$done" "$running" "$(( total - done - running ))"
-    printf '  ─%.0s' $(seq 1 44); echo ""
+    printf '  -%.0s' $(seq 1 44); echo ""
   done
 }
 
