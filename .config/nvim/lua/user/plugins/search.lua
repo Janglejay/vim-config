@@ -44,7 +44,6 @@ return {
 
         if jdtls_client then
           -- 一次性拉取所有项目符号，过滤 Maven，用 fzf 本地模糊搜索
-          -- 优势：结果完全排除 .m2 依赖，fzf 客户端速度极快
           local m2_path = vim.fn.expand("~") .. "/.m2/"
           local kind_icons = {
             [1]="󰙐 Text", [2]="󰆧 Method", [3]="󰊕 Function",
@@ -54,14 +53,20 @@ return {
             [21]=" Constant", [22]="󰙅 Struct", [25]="󰅲 TypeParam",
           }
 
-          vim.notify("搜索符号中（过滤 Maven 依赖）...", vim.log.levels.INFO)
-
-          -- 用空 query 拉取所有项目符号（jdtls 会返回所有已索引的符号）
+          -- jdtls attach 后还需要 10-30s 加载缓存到内存才能响应符号查询
+          -- 用 30s 超时，失败时提示用户等待并退化为文件搜索
+          vim.notify("搜索符号中...", vim.log.levels.INFO)
           local ok, result = jdtls_client.request_sync(
-            "workspace/symbol", { query = "" }, 15000, 0)
+            "workspace/symbol", { query = "" }, 30000, 0)
 
           if not ok or not result or not result.result then
-            vim.notify("符号查询失败或超时，退化为文件搜索", vim.log.levels.WARN)
+            -- 查询失败原因：jdtls 还在加载缓存（即使 attach 了也需要 10-30s 就绪）
+            -- 状态栏显示 "󰔟 jdtls: 索引中" 时说明还没就绪
+            vim.notify(
+              "jdtls 尚未完全就绪（正在加载索引缓存），已退化为文件搜索\n"
+              .. "提示：等状态栏显示 ✓ jdtls 后重试 <Leader>f",
+              vim.log.levels.WARN
+            )
             fzf.files()
             return
           end

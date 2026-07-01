@@ -78,28 +78,36 @@ local function lsp_keymaps(bufnr)
   --   • 在引用处 → 跳到定义
   --   • 在定义处 → 显示所有引用（含属性/字段引用）
   vim.keymap.set("n", "gd", function()
-    -- 检查是否有支持 definition 的客户端（避免 "not supported" 报错）
-    local has_def = vim.tbl_contains(
-      vim.tbl_map(function(c)
-        return c.server_capabilities.definitionProvider == true
-      end, vim.lsp.get_clients({ bufnr = 0 })),
-      true
-    )
+    -- 检查是否有支持 definition 的客户端
+    -- 注意：jdtls 的 definitionProvider 可能是 table（非 true），用 ~= nil/false 判断
+    local has_def = false
+    for _, c in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
+      local dp = c.server_capabilities.definitionProvider
+      if dp ~= nil and dp ~= false then
+        has_def = true; break
+      end
+    end
     if not has_def then
-      -- 列出当前 attach 的所有客户端（便于调试）
-      local names = vim.tbl_map(function(c) return c.name end,
-                    vim.lsp.get_clients({ bufnr = 0 }))
-      local hint = #names == 0
-        and "jdtls 未连接，请等待索引完成或按 <Leader>jR 重建"
-        or  ("jdtls 正在初始化，已 attach: " .. table.concat(names, ", ") .. "。请稍等片刻再试")
-      vim.notify(hint, vim.log.levels.WARN)
+      local clients = vim.lsp.get_clients({ bufnr = 0 })
+      if #clients == 0 then
+        vim.notify("jdtls 未连接。打开 .java 文件触发启动，或按 <Leader>jR 重建索引", vim.log.levels.WARN)
+      else
+        -- attach 了但能力未就绪：jdtls 还在从磁盘加载缓存（通常需要 10-30s）
+        -- 状态栏 󰔟 消失、变为 ✓ 后即可使用
+        local names = vim.tbl_map(function(c) return c.name end, clients)
+        vim.notify(
+          "jdtls 正在加载索引缓存（" .. table.concat(names, ", ") .. " 已 attach）\n"
+          .. "等状态栏变为 ✓ jdtls 后重试（通常 10-30 秒）",
+          vim.log.levels.WARN
+        )
+      end
       return
     end
     local fzf = require("fzf-lua")
     local params = vim.lsp.util.make_position_params()
 
-    -- 查询定义位置（超时 6s）
-    local def_res = vim.lsp.buf_request_sync(0, "textDocument/definition", params, 6000)
+    -- 查询定义位置（10s 超时，jdtls 加载缓存时可能较慢）
+    local def_res = vim.lsp.buf_request_sync(0, "textDocument/definition", params, 10000)
     local defs = {}
     if def_res then
       for _, res in pairs(def_res) do
