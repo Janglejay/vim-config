@@ -125,6 +125,46 @@ draw_bar() {
   printf "[%s] %d/%d (%d%%)" "$bar" "$done" "$total" "$pct"
 }
 
+# 每个项目的状态文件：$TMPDIR_CNT/running_<safe_name> 存储当前耗时(秒)
+# 完成后删除，monitor 通过文件列表感知哪些项目仍在运行
+_safe_name() { echo "$1" | tr -cd 'a-zA-Z0-9-_'; }
+set_running() { echo "$2" > "$TMPDIR_CNT/running_$(_safe_name "$1")"; }
+del_running() { rm -f "$TMPDIR_CNT/running_$(_safe_name "$1")"; }
+
+# ── Monitor 进程（独立运行，每 30s 打印一次快照）──────────────
+run_monitor() {
+  local total=$1
+  while true; do
+    sleep 30
+    local done=$(( $(cnt_get warmed) + $(cnt_get skipped) ))
+    local ts; ts=$(date '+%H:%M:%S')
+    echo ""
+    printf "  ── %s 进度快照 " "$ts"
+    printf '─%.0s' $(seq 1 40); echo ""
+
+    # 每个正在运行的项目单独一行：项目名 + 时间进度条
+    local running=0
+    for f in "$TMPDIR_CNT"/running_*; do
+      [ -f "$f" ] || continue
+      local raw; raw=$(basename "$f")
+      local name="${raw#running_}"    # 去掉前缀
+      local elapsed; elapsed=$(cat "$f" 2>/dev/null || echo 0)
+      local proj_bar; proj_bar=$(draw_bar "$elapsed" "$WAIT_PER_PROJECT" 20)
+      printf "  %-36s %s  %4ss / %ss\n" \
+        "$name" "$proj_bar" "$elapsed" "$WAIT_PER_PROJECT"
+      running=$((running + 1))
+    done
+
+    [ $running -eq 0 ] && echo "  (无项目运行中)"
+
+    # 整体完成进度
+    local overall; overall=$(draw_bar "$done" "$total" 20)
+    printf "  整体: %s  完成%d 运行%d 待处理%d\n" \
+      "$overall" "$done" "$running" "$(( total - done - running ))"
+    printf '  ─%.0s' $(seq 1 44); echo ""
+  done
+}
+
 # ──────────────────────────────────────────────────────────────
 # 单项目处理函数（在后台子进程中运行）
 # ──────────────────────────────────────────────────────────────
@@ -176,11 +216,8 @@ LUAEOF
         tmux kill-session -t "$session_name" 2>/dev/null || true
         break
       fi
-      if [ $((elapsed % 30)) -eq 0 ]; then
-        local done=$(( $(cnt_get warmed) + $(cnt_get skipped) ))
-        local bar; bar=$(draw_bar "$done" "$TOTAL_PROJECTS")
-        printf "  %s  ⏱  %s %ds\n" "$bar" "$project_name" "$elapsed"
-      fi
+      # 更新状态文件（供 monitor 进程读取）
+      set_running "$project_name" "$elapsed"
     done
 
   else
@@ -198,14 +235,14 @@ LUAEOF
     local elapsed=0
     while kill -0 "$nvim_pid" 2>/dev/null; do
       sleep 10; elapsed=$((elapsed + 10))
-      if [ $((elapsed % 30)) -eq 0 ]; then
-        local done=$(( $(cnt_get warmed) + $(cnt_get skipped) ))
-        local bar; bar=$(draw_bar "$done" "$TOTAL_PROJECTS")
-        printf "  %s  ⏱  %s %ds\n" "$bar" "$project_name" "$elapsed"
-      fi
+      # 更新状态文件（供 monitor 进程读取）
+      set_running "$project_name" "$elapsed"
     done
     wait "$nvim_pid" 2>/dev/null || true
   fi
+
+  # 完成：删除状态文件（monitor 据此感知项目结束）
+  del_running "$project_name"
 
   # 结果判断
   local ws_after; ws_after=$(ls "$JDTLS_CACHE" 2>/dev/null | wc -l | tr -d ' ')
@@ -241,6 +278,10 @@ echo "  共检测到 ${TOTAL_PROJECTS} 个 Java 项目"
 
 notify "jdtls 索引构建开始 🔨" "并行预热 ${TOTAL_PROJECTS} 个项目（${MAX_JOBS} 并发，${START_TIME}）"
 
+# 启动 monitor 进程（每 30s 打印一次快照，汇总所有项目状态）
+run_monitor "$TOTAL_PROJECTS" &
+MONITOR_PID=$!
+
 pids=()   # 后台子进程 PID 列表
 
 for project_dir in "$PROJECTS_DIR"/*/; do
@@ -274,6 +315,9 @@ done
 for pid in "${pids[@]+"${pids[@]}"}"; do
   wait "$pid" 2>/dev/null || true
 done
+
+# 停止 monitor 进程
+kill "$MONITOR_PID" 2>/dev/null || true
 
 END_TIME=$(date '+%H:%M')
 total=$(cnt_get total); warmed=$(cnt_get warmed)
