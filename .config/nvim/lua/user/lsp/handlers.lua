@@ -115,10 +115,7 @@ local function lsp_keymaps(bufnr)
 
     if at_def then
       -- 在定义处 → 显示引用（属性/方法均适用）
-      fzf.lsp_references({
-        fzf_opts = { ["--query"] = "!.m2" },
-        winopts  = { title = " gd → References (at declaration) " },
-      })
+      fzf.lsp_references()
     elseif #defs == 1 then
       -- 只有一个定义 → 直接跳转
       local d   = defs[1]
