@@ -3,21 +3,15 @@
 #
 # 使用方法：
 #   手动运行: bash ~/.config/nvim/scripts/prewarm-jdtls.sh
-#   定时任务: crontab -e 添加 "0 22 * * 0 bash ~/.config/nvim/scripts/prewarm-jdtls.sh"
-#             (每周日 22:00 自动运行)
-#
-# 原理：
-#   用 tmux 在后台为每个项目打开 Neovim（找一个 .java 文件触发 jdtls）
-#   jdtls 会建立本地 workspace 缓存，下次在 Neovim 中打开项目时直接从缓存加载（几秒内就绪）
-#   一次预热后，workspace 缓存持久保存，只有项目大改动才需要重新预热
+#   定时任务: crontab -e → 0 12 * * 1,3,5 bash ~/.config/nvim/scripts/prewarm-jdtls.sh >> ~/prewarm-jdtls.log 2>&1
 
 set -euo pipefail
 
 PROJECTS_DIR="$HOME/Company/JavaProjects"
-# jdtls（通过 Mason wrapper）实际使用 ~/Library/Caches/jdtls/jdtls-HASH/ 作为 workspace
-JDTLS_CACHE="$HOME/Library/Caches/jdtls"
-WAIT_PER_PROJECT=360   # 每个项目最多等 6 分钟（首次索引大项目需要时间）
-FORCE_REBUILD=false    # 设为 true 则跳过缓存检查重新索引所有项目
+JDTLS_CACHE="$HOME/Library/Caches/jdtls"   # jdtls（Mason wrapper）实际的 workspace 目录
+WAIT_PER_PROJECT=360   # 每个项目最多等 6 分钟
+MAX_JOBS=2             # 最多同时跑几个 jdtls（内存限制，建议不超过 2）
+FORCE_REBUILD=false
 
 # 颜色输出
 GREEN='\033[0;32m' YELLOW='\033[1;33m' RED='\033[0;31m' NC='\033[0m'
@@ -25,121 +19,147 @@ log()  { echo -e "${GREEN}[✓]${NC} $*"; }
 warn() { echo -e "${YELLOW}[⟳]${NC} $*"; }
 err()  { echo -e "${RED}[✗]${NC} $*"; }
 
-# macOS 系统通知（在 tmux/cron 中运行，需要 launchctl 切换到用户会话）
+# macOS 系统通知（launchctl 确保 cron/tmux 环境也能弹窗）
 NOTIFIER=/opt/homebrew/bin/terminal-notifier
 notify() {
-  local title="$1"
-  local msg="$2"
-  # 在 cron/tmux 中用 launchctl 切换到登录用户的 GUI 会话
-  local uid
-  uid=$(id -u)
-  {
-    if [ -x "$NOTIFIER" ]; then
-      launchctl asuser "$uid" "$NOTIFIER" \
-        -title "$title" -message "$msg" -sound Glass
+  local uid; uid=$(id -u)
+  { if [ -x "$NOTIFIER" ]; then
+      launchctl asuser "$uid" "$NOTIFIER" -title "$1" -message "$2" -sound Glass
     else
       launchctl asuser "$uid" /usr/bin/osascript \
-        -e "display notification \"$msg\" with title \"$title\" sound name \"Glass\""
+        -e "display notification \"$2\" with title \"$1\" sound name \"Glass\""
     fi
-  } >/dev/null 2>&1 || true   # 任何失败都继续，不中断脚本
+  } >/dev/null 2>&1 || true
 }
 
-# 确保 tmux 可用
-if ! command -v tmux &>/dev/null; then
-  err "需要 tmux，请先 brew install tmux"
-  exit 1
-fi
+# 原子计数器（用临时文件，支持并行子进程写入）
+TMPDIR_CNT=$(mktemp -d)
+echo 0 > "$TMPDIR_CNT/total"
+echo 0 > "$TMPDIR_CNT/warmed"
+echo 0 > "$TMPDIR_CNT/skipped"
+echo 0 > "$TMPDIR_CNT/failed"
+cnt_inc() { echo $(( $(cat "$TMPDIR_CNT/$1") + 1 )) > "$TMPDIR_CNT/$1"; }
+cnt_get() { cat "$TMPDIR_CNT/$1"; }
+cleanup() { rm -rf "$TMPDIR_CNT"; }
+trap cleanup EXIT
 
-START_TIME=$(date '+%H:%M')
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  jdtls 预热脚本 — Java 项目索引构建"
-echo "  项目目录: $PROJECTS_DIR"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+# ──────────────────────────────────────────────────────────────
+# 单项目处理函数（在后台子进程中运行）
+# ──────────────────────────────────────────────────────────────
+process_project() {
+  local project_dir="$1"
+  local project_name; project_name=$(basename "$project_dir")
 
-notify "jdtls 索引构建开始 🔨" "开始为 JavaProjects 构建索引，完成后通知 (${START_TIME})"
+  # 找一个 Java 文件触发 jdtls（用 find，fd v8.4+ 有路径识别 bug）
+  local java_file
+  java_file=$(find "$project_dir" -name "*.java" \
+              -not -path "*/target/*" -not -path "*/.git/*" \
+              2>/dev/null | head -1) || true
 
-total=0; skipped=0; warmed=0; failed=0
-
-for project_dir in "$PROJECTS_DIR"/*/; do
-  [ -d "$project_dir" ] || continue
-  project_name=$(basename "$project_dir")
-
-  # 检查是否是 Java 项目
-  is_java=false
-  [ -f "$project_dir/pom.xml" ]       && is_java=true
-  [ -f "$project_dir/build.gradle" ]   && is_java=true
-  $is_java || continue
-
-  total=$((total + 1))
-
-  # 找一个 Java 文件（触发 jdtls 需要）
-  # 用 find 替代 fd（fd v8.4+ 将路径误识别为 pattern，含 / 时报错）
-  java_file=$(find "$project_dir" -name "*.java" -not -path "*/target/*" \
-              -not -path "*/.git/*" 2>/dev/null | head -1) || true
   if [ -z "$java_file" ]; then
     warn "$project_name (无 .java 文件，跳过)"
-    skipped=$((skipped + 1))
-    continue
+    cnt_inc skipped
+    return
   fi
 
-  warn "$project_name → 构建索引中（最多等 ${WAIT_PER_PROJECT}s）..."
+  warn "$project_name → 构建索引中（最多 ${WAIT_PER_PROJECT}s）..."
 
-  session_name="jdtls-warm-$(echo "$project_name" | tr '.' '-')"
+  local session_name="jdtls-${project_name:0:30}"
   tmux kill-session -t "$session_name" 2>/dev/null || true
 
-  # 记录索引前的 workspace 数量（用于后面判断是否新建了 workspace）
-  ws_count_before=$(ls "$JDTLS_CACHE" 2>/dev/null | wc -l | tr -d ' ')
+  local ws_before; ws_before=$(ls "$JDTLS_CACHE" 2>/dev/null | wc -l | tr -d ' ')
 
-  # 在 tmux 后台打开 nvim（触发 jdtls 通过 ft=java 启动），等 WAIT 秒后退出
+  # 在独立 tmux session 里开 nvim，触发 jdtls 通过 FileType=java 加载
   tmux new-session -d -s "$session_name" \
-    "cd '$project_dir' && nvim -c 'lua vim.defer_fn(function() vim.cmd(\"qa!\") end, $((WAIT_PER_PROJECT * 1000)))' '$java_file'" \
-    2>/dev/null
+    "cd '$project_dir' && nvim \
+      -c 'lua vim.defer_fn(function() vim.cmd(\"qa!\") end, $((WAIT_PER_PROJECT * 1000)))' \
+      '$java_file'" 2>/dev/null || true
 
-  # 轮询等待 nvim session 结束
-  elapsed=0
+  # 等待 nvim session 结束（或超时强制关闭）
+  local elapsed=0
   while tmux has-session -t "$session_name" 2>/dev/null; do
-    sleep 10
-    elapsed=$((elapsed + 10))
+    sleep 10; elapsed=$((elapsed + 10))
     if [ $elapsed -ge $WAIT_PER_PROJECT ]; then
       tmux kill-session -t "$session_name" 2>/dev/null || true
       break
     fi
-    [ $((elapsed % 60)) -eq 0 ] && echo "    $project_name: ${elapsed}s / ${WAIT_PER_PROJECT}s ..."
+    [ $((elapsed % 60)) -eq 0 ] && echo "    [$project_name] ${elapsed}s/${WAIT_PER_PROJECT}s ..."
   done
 
-  # 判断成功：看 jdtls workspace 数量是否增加（说明新建了 workspace）
-  ws_count_after=$(ls "$JDTLS_CACHE" 2>/dev/null | wc -l | tr -d ' ')
-  if [ "$ws_count_after" -gt "$ws_count_before" ]; then
-    log "$project_name (索引启动成功，jdtls 新建了 workspace)"
-    warmed=$((warmed + 1))
+  # 结果判断
+  local ws_after; ws_after=$(ls "$JDTLS_CACHE" 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$ws_after" -gt "$ws_before" ]; then
+    log "$project_name ✓ 新建 workspace（首次索引）"
   else
-    # workspace 未新增，可能 jdtls 已有该项目缓存（复用了旧 workspace）
-    log "$project_name (jdtls 已有缓存或索引仍在进行)"
-    warmed=$((warmed + 1))  # 也算成功，jdtls 进程确实启动了
+    log "$project_name ✓ 复用已有缓存（已索引过）"
   fi
+  cnt_inc warmed
+}
 
-  # 等 jdtls 进程退出后再处理下一个（避免并发占用过多资源）
-  while pgrep -f "org.eclipse.jdt.ls.core.id1" >/dev/null 2>&1; do
-    sleep 5
-    elapsed=$((elapsed + 5))
-    [ $((elapsed % 30)) -eq 0 ] && echo "    等待 jdtls 进程退出..."
-    [ $elapsed -gt $((WAIT_PER_PROJECT * 2)) ] && break
+# ──────────────────────────────────────────────────────────────
+# 主流程：并行处理，最多 MAX_JOBS 个并发
+# ──────────────────────────────────────────────────────────────
+if ! command -v tmux &>/dev/null; then
+  err "需要 tmux，请先: brew install tmux"; exit 1
+fi
+
+START_TIME=$(date '+%H:%M')
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  jdtls 预热脚本 — 并行 ${MAX_JOBS} 个项目"
+echo "  目录: $PROJECTS_DIR  |  开始: ${START_TIME}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+notify "jdtls 索引构建开始 🔨" "并行预热 JavaProjects (${MAX_JOBS} 并发，${START_TIME})"
+
+pids=()   # 后台子进程 PID 列表
+
+for project_dir in "$PROJECTS_DIR"/*/; do
+  [ -d "$project_dir" ] || continue
+  local_name=$(basename "$project_dir")
+
+  # 快速过滤非 Java 项目（不进子进程，避免 overhead）
+  if [ ! -f "$project_dir/pom.xml" ] && [ ! -f "$project_dir/build.gradle" ]; then
+    continue
+  fi
+  cnt_inc total
+
+  # 启动后台子进程处理项目
+  process_project "$project_dir" &
+  pids+=($!)
+
+  # 限流：达到 MAX_JOBS 时等任意一个完成
+  while [ ${#pids[@]} -ge $MAX_JOBS ]; do
+    new_pids=()
+    for pid in "${pids[@]}"; do
+      if kill -0 "$pid" 2>/dev/null; then
+        new_pids+=("$pid")   # 还在跑
+      fi
+    done
+    pids=("${new_pids[@]+"${new_pids[@]}"}")
+    [ ${#pids[@]} -ge $MAX_JOBS ] && sleep 5
   done
-  sleep 3
+done
+
+# 等待所有剩余子进程完成
+for pid in "${pids[@]+"${pids[@]}"}"; do
+  wait "$pid" 2>/dev/null || true
 done
 
 END_TIME=$(date '+%H:%M')
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  完成！共 $total 个 Java 项目"
-echo "  ✓ 新建/更新: $warmed  ⟳ 已跳过: $skipped  ✗ 失败: $failed"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+total=$(cnt_get total); warmed=$(cnt_get warmed)
+skipped=$(cnt_get skipped); failed=$(cnt_get failed)
 
-# 结束通知
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  完成！共 $total 个 Java 项目"
+printf "  ✓ 索引: %-4s  ⟳ 跳过: %-4s  ✗ 失败: %-4s  时间: %s→%s\n" \
+  "$warmed" "$skipped" "$failed" "$START_TIME" "$END_TIME"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
 if [ "$failed" -gt 0 ]; then
-  notify "jdtls 索引构建完成 ⚠️" \
-    "共 ${total} 项目: +${warmed} 更新  ~${skipped} 跳过  x${failed} 失败  (${START_TIME}-${END_TIME})"
+  notify "jdtls 索引完成 ⚠️" \
+    "共${total}项目: +${warmed}索引 ~${skipped}跳过 x${failed}失败 (${START_TIME}-${END_TIME})"
 else
-  notify "jdtls 索引构建完成 ✅" \
-    "共 ${total} 项目: +${warmed} 更新  ~${skipped} 跳过  (${START_TIME}-${END_TIME})"
+  notify "jdtls 索引完成 ✅" \
+    "共${total}项目: +${warmed}索引 ~${skipped}跳过 (${START_TIME}-${END_TIME})"
 fi
