@@ -27,9 +27,17 @@ return {
       local java21 = vim.fn.trim(vim.fn.system("/usr/libexec/java_home -v 21 2>/dev/null"))
       if java21 == "" then java21 = "/Library/Java/JavaVirtualMachines/zulu-21.jdk/Contents/Home" end
 
-      -- Mason 的 jdtls wrapper（Python 脚本）通过 JAVA_HOME 找 Java
+      -- Mason 的 jdtls wrapper 通过 JAVA_HOME 找 Java
+      -- Lombok 需要通过 --jvm-arg 传 -javaagent，否则 @Data/@Getter/@Setter 生成的
+      -- 方法无法被 jdtls 识别，导致 gd/gr 找不到 getter/setter 引用
+      local cmd = { jdtls_bin }
+      if vim.fn.filereadable(lombok_path) == 1 then
+        table.insert(cmd, "--jvm-arg=-javaagent:" .. lombok_path)
+        table.insert(cmd, "--jvm-arg=-Xbootclasspath/a:" .. lombok_path)
+      end
+
       local config = {
-        cmd = { jdtls_bin },
+        cmd = cmd,
         cmd_env = { JAVA_HOME = java21 },
         root_dir = find_root(),
         settings = {
@@ -51,6 +59,9 @@ return {
             },
             sources = { organizeImports = { starThreshold = 9999, staticStarThreshold = 9999 } },
             codeGeneration = { useBlocks = true },
+            -- Lombok 注解处理：让 jdtls 识别 @Data/@Getter/@Setter 生成的方法
+            autobuild = { enabled = true },
+            contentProvider = { preferred = "fernflower" },
           },
         },
         init_options = {
