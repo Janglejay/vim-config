@@ -32,8 +32,9 @@ return {
       -- 方法无法被 jdtls 识别，导致 gd/gr 找不到 getter/setter 引用
       local cmd = { jdtls_bin }
       if vim.fn.filereadable(lombok_path) == 1 then
+        -- -javaagent 让 Lombok 注解处理器运行，识别 @Data/@Getter/@Setter
+        -- 注意：Java 21 已废弃 -Xbootclasspath/a，只需 -javaagent 即可
         table.insert(cmd, "--jvm-arg=-javaagent:" .. lombok_path)
-        table.insert(cmd, "--jvm-arg=-Xbootclasspath/a:" .. lombok_path)
       end
 
       local config = {
