@@ -156,10 +156,9 @@ return {
       vim.keymap.set("n", "gi", function() fzf.lsp_implementations() end,
         vim.tbl_extend("force", opts, { desc = "GotoImplementation" }))
 
-      -- gR: CallHierarchy 右侧边栏（树形结构，持久显示）
-      vim.keymap.set("n", "gR", function()
-        require("user.call_hierarchy").open()
-      end, vim.tbl_extend("force", opts, { desc = "CallHierarchy sidebar" }))
+      -- gR: Call Hierarchy（lspsaga GUI 风格，可展开/折叠，彩色图标）
+      vim.keymap.set("n", "gR", "<cmd>Lspsaga incoming_calls<CR>",
+        vim.tbl_extend("force", opts, { desc = "CallHierarchy (lspsaga)" }))
 
       -- qi: QuickImplementations
       vim.keymap.set("n", "qi", function() fzf.lsp_implementations() end,
@@ -237,4 +236,51 @@ return {
 
   -- vim-bookmarks（立即加载确保 bm# 函数始终可用）
   { "MattesGroeger/vim-bookmarks", lazy = false },
+
+  -- lspsaga: GUI 风格 LSP UI（主要用于 gR Call Hierarchy）
+  {
+    "nvimdev/lspsaga.nvim",
+    event = "LspAttach",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+      "nvim-tree/nvim-web-devicons",
+    },
+    config = function()
+      require("lspsaga").setup({
+        -- 只配置 call hierarchy，其他功能不干扰已有快捷键
+        callhierarchy = {
+          layout = "float",       -- 浮窗形式，不侵占编辑区
+          left_width = 0.3,       -- 调用链树占浮窗 30%，预览占 70%
+          keys = {
+            edit         = "<CR>",  -- 跳转到调用处
+            vsplit       = "v",
+            split        = "s",
+            tabe         = "t",
+            quit         = "q",
+            close        = "q",
+            toggle_or_req = "u",   -- u 展开/折叠节点
+          },
+        },
+        -- 禁用会覆盖已有快捷键的功能
+        ui = {
+          border        = "rounded",
+          devicon       = true,
+          title         = true,
+          expand        = "⊞",
+          collapse      = "⊟",
+          code_action   = "💡",
+          diagnostic    = "🐛",
+          incoming      = "󰏷 ",   -- 调用者图标
+          outgoing      = "󰏻 ",   -- 被调用者图标
+          hover         = "▣",
+        },
+        -- 关闭会与我们现有配置冲突的功能
+        lightbulb     = { enable = false },
+        diagnostic    = { show_code_action = false },
+        rename        = { in_select = false },
+        outline       = { auto_preview = false },
+        finder        = { default = "ref" },
+      })
+    end,
+  },
 }
