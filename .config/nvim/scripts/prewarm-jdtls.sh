@@ -7,6 +7,71 @@
 
 set -euo pipefail
 
+# ──────────────────────────────────────────────────────────────
+# 全局资源跟踪（用于 cleanup）
+# ──────────────────────────────────────────────────────────────
+declare -a pids=()          # 后台子进程 PID
+TMPDIR_CNT=""               # 原子计数临时目录（后面赋值）
+CLEANUP_DONE=false          # 防止重复清理
+INTERRUPTED=false           # 是否被中断
+
+# 资源清理函数：无论正常退出/中断/错误都会执行
+cleanup() {
+  [ "$CLEANUP_DONE" = true ] && return
+  CLEANUP_DONE=true
+
+  echo ""
+  warn "释放资源..."
+
+  # 1. 发送 SIGTERM 给所有后台子进程（含进程组）
+  for pid in "${pids[@]+"${pids[@]}"}"; do
+    # 尝试终止整个进程组（避免孤儿进程）
+    kill -- -"$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
+  done
+
+  # 等待子进程退出（最多 8 秒），超时则 SIGKILL
+  local deadline=$(( $(date +%s) + 8 ))
+  for pid in "${pids[@]+"${pids[@]}"}"; do
+    while kill -0 "$pid" 2>/dev/null && [ "$(date +%s)" -lt "$deadline" ]; do
+      sleep 1
+    done
+    kill -KILL "$pid" 2>/dev/null || true
+  done
+
+  # 2. 关闭所有本脚本创建的 tmux sessions（命名约定：jdtls- 前缀）
+  if command -v tmux &>/dev/null; then
+    tmux list-sessions -F '#{session_name}' 2>/dev/null \
+      | grep '^jdtls-' \
+      | while read -r s; do tmux kill-session -t "$s" 2>/dev/null || true; done
+  fi
+
+  # 3. 清理临时目录（原子计数器）
+  [ -n "${TMPDIR_CNT:-}" ] && [ -d "$TMPDIR_CNT" ] && rm -rf "$TMPDIR_CNT"
+
+  log "资源释放完成"
+}
+
+# 中断处理（Ctrl+C / kill）：先清理再通知
+on_interrupt() {
+  INTERRUPTED=true
+  echo ""
+  err "收到中断信号，正在清理所有资源..."
+  cleanup
+  local uid; uid=$(id -u)
+  { launchctl asuser "$uid" /opt/homebrew/bin/terminal-notifier \
+      -title "jdtls 索引被中断 ⚠️" \
+      -message "脚本被手动中断，已清理所有 tmux sessions 和后台进程" \
+      -sound Sosumi; } >/dev/null 2>&1 || true
+  exit 130
+}
+
+# 注册信号处理：
+#   EXIT  = 正常退出（cleanup 做最后收尾）
+#   INT   = Ctrl+C
+#   TERM  = kill 命令
+trap cleanup EXIT
+trap on_interrupt INT TERM
+
 PROJECTS_DIR="$HOME/Company/JavaProjects"
 JDTLS_CACHE="$HOME/Library/Caches/jdtls"   # jdtls（Mason wrapper）实际的 workspace 目录
 WAIT_PER_PROJECT=360   # 每个项目最多等 6 分钟
@@ -43,8 +108,7 @@ echo 0 > "$TMPDIR_CNT/skipped"
 echo 0 > "$TMPDIR_CNT/failed"
 cnt_inc() { echo $(( $(cat "$TMPDIR_CNT/$1") + 1 )) > "$TMPDIR_CNT/$1"; }
 cnt_get() { cat "$TMPDIR_CNT/$1"; }
-cleanup() { rm -rf "$TMPDIR_CNT"; }
-trap cleanup EXIT
+# 注意：cleanup 和 trap 已在脚本顶部定义，此处不重复注册
 
 # ──────────────────────────────────────────────────────────────
 # 单项目处理函数（在后台子进程中运行）
