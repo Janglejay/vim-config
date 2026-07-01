@@ -74,7 +74,8 @@ trap on_interrupt INT TERM
 
 PROJECTS_DIR="$HOME/Company/JavaProjects"
 JDTLS_CACHE="$HOME/Library/Caches/jdtls"   # jdtls（Mason wrapper）实际的 workspace 目录
-WAIT_PER_PROJECT=360   # 每个项目最多等 6 分钟
+WAIT_PER_PROJECT=0     # 0 = 不限时，等 jdtls 自然完成（推荐，脚本在凌晨/中午跑）
+                       # 改为正整数（秒）可设超时，超时后 jdtls 增量缓存仍保留
 MAX_JOBS=2             # 最多同时跑几个 jdtls（内存限制，建议不超过 2）
 FORCE_REBUILD=false
 # 提供 PTY 的方式：tmux（默认）或 script（macOS 内置，不需要额外安装）
@@ -129,46 +130,58 @@ process_project() {
     return
   fi
 
-  warn "$project_name → 构建索引中（最多 ${WAIT_PER_PROJECT}s）..."
+  local wait_desc; wait_desc=$( [ "${WAIT_PER_PROJECT:-0}" -eq 0 ] && echo "无时间限制" || echo "最多 ${WAIT_PER_PROJECT}s" )
+  warn "$project_name → 构建索引中（${wait_desc}）..."
 
   local ws_before; ws_before=$(ls "$JDTLS_CACHE" 2>/dev/null | wc -l | tr -d ' ')
-  local nvim_cmd="cd '$project_dir' && nvim \
-    -c 'lua vim.defer_fn(function() vim.cmd(\"qa!\") end, $((WAIT_PER_PROJECT * 1000)))' \
-    '$java_file'"
+
+  # nvim 自动退出命令：有超时则用 defer_fn 定时 qa!，无超时则不注入（jdtls 完成后手动退出）
+  # 注：jdtls 完成索引后不会自动关闭 nvim，无超时模式下 nvim 会一直等
+  # 解决方案：用 LspProgress "end" 事件检测索引完成，自动退出
+  local auto_quit_lua=""
+  if [ "${WAIT_PER_PROJECT:-0}" -gt 0 ]; then
+    auto_quit_lua="-c 'lua vim.defer_fn(function() vim.cmd(\"qa!\") end, $((WAIT_PER_PROJECT * 1000)))'"
+  else
+    # 无限等待模式：监听 jdtls 索引完成事件，完成后自动退出
+    auto_quit_lua="-c 'lua vim.api.nvim_create_autocmd(\"LspProgress\", { callback = function(ev) local v = (ev.data.params or {}).value or {}; if v.kind == \"end\" then vim.defer_fn(function() vim.cmd(\"qa!\") end, 3000) end end })'"
+  fi
+  local nvim_cmd="cd '$project_dir' && nvim $auto_quit_lua '$java_file'"
   local nvim_pid=""
 
   if [ "${USE_TMUX:-true}" = true ] && command -v tmux &>/dev/null; then
     # ── 方案 A：tmux（默认，cron 环境最稳定）──────────────────────
     local session_name="jdtls-${project_name:0:30}"
     tmux kill-session -t "$session_name" 2>/dev/null || true
-    tmux new-session -d -s "$session_name" "bash -c $'$nvim_cmd'" 2>/dev/null || true
+    tmux new-session -d -s "$session_name" "bash -c \"$nvim_cmd\"" 2>/dev/null || true
 
     local elapsed=0
     while tmux has-session -t "$session_name" 2>/dev/null; do
       sleep 10; elapsed=$((elapsed + 10))
-      if [ $elapsed -ge $WAIT_PER_PROJECT ]; then
-        tmux kill-session -t "$session_name" 2>/dev/null || true; break
+      # 有超时：超时后强制关闭
+      if [ "${WAIT_PER_PROJECT:-0}" -gt 0 ] && [ $elapsed -ge "$WAIT_PER_PROJECT" ]; then
+        warn "$project_name 超时 ${WAIT_PER_PROJECT}s，强制关闭（增量缓存已保留）"
+        tmux kill-session -t "$session_name" 2>/dev/null || true
+        break
       fi
-      [ $((elapsed % 60)) -eq 0 ] && echo "    [$project_name] ${elapsed}s/${WAIT_PER_PROJECT}s ..."
+      [ $((elapsed % 60)) -eq 0 ] && echo "    [$project_name] ${elapsed}s ..."
     done
 
   else
     # ── 方案 B：script（macOS 内置 PTY，不需要 tmux）──────────────
-    # script -q /dev/null 分配伪终端，nvim 可正常启动
-    # timeout 限制最长运行时间
     (
       cd "$project_dir"
-      script -q /dev/null \
-        timeout "$WAIT_PER_PROJECT" \
-        nvim -c "lua vim.defer_fn(function() vim.cmd('qa!') end, $((WAIT_PER_PROJECT * 1000)))" \
-        "$java_file"
+      if [ "${WAIT_PER_PROJECT:-0}" -gt 0 ]; then
+        script -q /dev/null timeout "$WAIT_PER_PROJECT" bash -c "$nvim_cmd"
+      else
+        script -q /dev/null bash -c "$nvim_cmd"
+      fi
     ) >/dev/null 2>&1 &
     nvim_pid=$!
 
     local elapsed=0
     while kill -0 "$nvim_pid" 2>/dev/null; do
       sleep 10; elapsed=$((elapsed + 10))
-      [ $((elapsed % 60)) -eq 0 ] && echo "    [$project_name] ${elapsed}s/${WAIT_PER_PROJECT}s ..."
+      [ $((elapsed % 60)) -eq 0 ] && echo "    [$project_name] ${elapsed}s ..."
     done
     wait "$nvim_pid" 2>/dev/null || true
   fi
