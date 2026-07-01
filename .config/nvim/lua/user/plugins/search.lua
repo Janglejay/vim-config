@@ -41,26 +41,62 @@ return {
         end
 
         if sym_client then
-          -- jdtls 就绪：用 lsp_live_workspace_symbols（实时查询，按键触发，不会超时）
-          -- 比一次性 workspace/symbol 更稳定，jdtls 初始化过程中也能逐步返回结果
-          local bufnr = vim.api.nvim_get_current_buf()
-          local was_attached = vim.lsp.buf_is_attached(bufnr, sym_client.id)
-          if not was_attached then
-            -- 非 Java 文件时临时 attach，让请求能发出
-            pcall(vim.lsp.buf_attach_client, bufnr, sym_client.id)
+          -- jdtls 就绪：一次性拉取所有符号，过滤 jdt:// 和 .m2（只显示项目源码）
+          -- jdt:// = JAR 包里的类（Maven 依赖），file:// = 项目自身的源文件
+          local ok, result = sym_client.request_sync(
+            "workspace/symbol", { query = "" }, 8000, 0)
+
+          if not ok or not result or not result.result or #result.result == 0 then
+            -- jdtls 还在初始化，静默退化为文件搜索（不显示烦人通知）
+            fzf.files()
+            return
           end
-          fzf.lsp_live_workspace_symbols({
+
+          local entries, entry_map = {}, {}
+          local icons = {
+            [2]="󰆧 Mthd",[3]="󰊕 Func",[4]=" Ctor",
+            [5]="󰜢 Field",[6]="󰀫 Var",[7]="󰠱 Class",
+            [8]="󰜰 Intf",[13]="󰋺 Enum",
+          }
+          local m2 = vim.fn.expand("~") .. "/.m2/"
+
+          for _, sym in ipairs(result.result) do
+            local uri = (sym.location or {}).uri or ""
+            -- 跳过 jdt://（JAR 包内的类）和 .m2（Maven 本地仓库）
+            if not uri:match("^jdt://") and not uri:find(m2, 1, true) then
+              local path  = vim.uri_to_fname(uri)
+              local lnum  = ((sym.location.range or {}).start or {}).line or 0
+              local fname = vim.fn.fnamemodify(path, ":~:.")
+              local icon  = icons[sym.kind] or "󰙐 Sym "
+              local disp  = string.format("%-50s %-10s %s:%d",
+                sym.name, icon, fname, lnum + 1)
+              table.insert(entries, disp)
+              entry_map[disp] = { file = path, lnum = lnum + 1 }
+            end
+          end
+
+          if #entries == 0 then fzf.files(); return end
+
+          fzf.fzf_exec(entries, {
+            prompt  = "SearchEverywhere❯ ",
             winopts = {
-              title  = " Search: 类·方法·字段·文件名 ",
-              height = 0.85, width = 0.90,
+              title   = string.format(" 项目符号 %d 个（已过滤 JAR/Maven）", #entries),
+              height  = 0.85, width = 0.92,
               preview = { layout = "vertical", vertical = "down:45%" },
             },
+            previewer = "builtin",
+            actions   = {
+              ["default"] = function(sel)
+                if not sel or not sel[1] then return end
+                local info = entry_map[sel[1]]
+                if info then
+                  vim.cmd("edit " .. vim.fn.fnameescape(info.file))
+                  pcall(vim.api.nvim_win_set_cursor, 0, { info.lnum, 0 })
+                  vim.cmd("normal! zz")
+                end
+              end,
+            },
           })
-          if not was_attached then
-            vim.defer_fn(function()
-              pcall(vim.lsp.buf_detach_client, bufnr, sym_client.id)
-            end, 500)
-          end
         else
           -- jdtls 未就绪：尝试在后台触发启动，同时展示文件搜索
           if _G.start_jdtls_for_project then _G.start_jdtls_for_project() end
@@ -211,12 +247,16 @@ return {
           outgoing      = "󰏻 ",   -- 被调用者图标
           hover         = "▣",
         },
-        -- 关闭会与我们现有配置冲突的功能
-        lightbulb     = { enable = false },
-        diagnostic    = { show_code_action = false },
-        rename        = { in_select = false },
-        outline       = { auto_preview = false },
-        finder        = { default = "ref" },
+        -- 关闭所有非 call hierarchy 的后台功能
+        -- symbol_in_winbar 会后台轮询 buffer 符号，buffer 删除后崩溃
+        symbol_in_winbar = { enable = false },
+        lightbulb        = { enable = false },
+        diagnostic       = { show_code_action = false },
+        rename           = { in_select = false },
+        outline          = { auto_preview = false },
+        finder           = { default = "ref" },
+        -- beacon 是导航高亮动画，关掉节省资源
+        beacon           = { enable = false },
       })
     end,
   },
