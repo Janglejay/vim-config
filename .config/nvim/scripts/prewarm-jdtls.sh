@@ -149,10 +149,16 @@ run_monitor() {
       local raw; raw=$(basename "$f")
       local name="${raw#running_}"    # 去掉前缀
       local elapsed; elapsed=$(cat "$f" 2>/dev/null || echo 0)
-      local pct=$(( elapsed * 100 / WAIT_PER_PROJECT ))
-      local proj_bar; proj_bar=$(draw_bar "$elapsed" "$WAIT_PER_PROJECT" 22)
-      printf "  %-35s %s  %ds/%ds\n" \
-        "$name" "$proj_bar" "$elapsed" "$WAIT_PER_PROJECT"
+      local proj_bar; proj_bar=$(draw_bar "$elapsed" "$WAIT_PER_PROJECT" 18)
+      # 读取 jdtls 真实进度消息（由 nvim Lua 写入）
+      local real_prog=""
+      local prog_file="$TMPDIR_CNT/progress_$name"
+      [ -f "$prog_file" ] && real_prog=$(cat "$prog_file" 2>/dev/null || echo "")
+      if [ -n "$real_prog" ]; then
+        printf "  %-30s %s %4ds  >> %s\n" "$name" "$proj_bar" "$elapsed" "$real_prog"
+      else
+        printf "  %-30s %s %4ds  (等待 jdtls 启动...)\n" "$name" "$proj_bar" "$elapsed"
+      fi
       running=$((running + 1))
     done
 
@@ -190,11 +196,42 @@ process_project() {
 
   local ws_before; ws_before=$(ls "$JDTLS_CACHE" 2>/dev/null | wc -l | tr -d ' ')
 
-  # 把自动退出 Lua 写入临时文件，避免 shell 字符串中嵌套 Lua 的引号灾难
+  # Lua 脚本：
+  #   1. 监听 jdtls 的 LspProgress 事件，把实时进度写到共享文件
+  #   2. 索引完成（kind="end"）时标记，超时后 qa!
   local lua_file="$TMPDIR_CNT/auto_quit_$$.lua"
+  local progress_file="$TMPDIR_CNT/progress_$(_safe_name "$project_name")"
   local timeout_ms=$(( WAIT_PER_PROJECT * 1000 ))
+
   cat > "$lua_file" << LUAEOF
--- 超时自动退出（${WAIT_PER_PROJECT}s 后 qa!）
+-- jdtls 实时进度跟踪：把 LspProgress 消息写到文件，供 monitor 进程读取
+local progress_file = "${progress_file}"
+
+vim.api.nvim_create_autocmd("LspProgress", {
+  callback = function(ev)
+    local client = vim.lsp.get_client_by_id(ev.data.client_id)
+    if not client or client.name ~= "jdtls" then return end
+    local val = (ev.data.params or {}).value or {}
+    local line = ""
+    if val.kind == "begin" then
+      line = "开始: " .. (val.title or "Building workspace")
+    elseif val.kind == "report" then
+      local pct = val.percentage and (val.percentage .. "%") or ""
+      local msg = val.message or val.title or ""
+      line = msg .. (pct ~= "" and (" [" .. pct .. "]") or "")
+    elseif val.kind == "end" then
+      line = "DONE"
+      -- 索引完成后 3s 退出 nvim
+      vim.defer_fn(function() pcall(vim.cmd, "qa!") end, 3000)
+    end
+    if line ~= "" then
+      local f = io.open(progress_file, "w")
+      if f then f:write(line); f:close() end
+    end
+  end
+})
+
+-- 兜底：超时后强制退出（jdtls 未完成时也不卡死）
 vim.defer_fn(function()
   pcall(vim.cmd, "qa!")
 end, ${timeout_ms})
@@ -242,8 +279,9 @@ LUAEOF
     wait "$nvim_pid" 2>/dev/null || true
   fi
 
-  # 完成：删除状态文件（monitor 据此感知项目结束）
+  # 完成：删除状态文件和进度文件（monitor 据此感知项目结束）
   del_running "$project_name"
+  rm -f "$TMPDIR_CNT/progress_$(_safe_name "$project_name")"
 
   # 结果判断
   local ws_after; ws_after=$(ls "$JDTLS_CACHE" 2>/dev/null | wc -l | tr -d ' ')
