@@ -95,10 +95,14 @@ keymap("n", "<Leader>r", 'viw"_dP', opts)  -- 替换当前词
 -- ====================
 -- Git / Hunk 操作
 -- ====================
+-- gitsigns：行内 hunk 跳转（保持不变）
 keymap("n", "<C-u>", "<cmd>lua require 'gitsigns'.reset_hunk()<cr>", opts)
 keymap("n", "gp", "<cmd>lua require 'gitsigns'.preview_hunk()<cr>", opts)
 keymap("n", "<C-f>", "<cmd>lua require 'gitsigns'.prev_hunk()<cr>", opts)
 keymap("n", "<C-d>", "<cmd>lua require 'gitsigns'.next_hunk()<cr>", opts)
+
+-- lazygit：完整 git TUI（浮窗）
+keymap("n", "<Leader>gl", "<cmd>lua _LAZYGIT_TOGGLE()<cr>", opts)
 
 -- ====================
 -- 跳转历史
@@ -113,7 +117,11 @@ keymap("n", "st", "<cmd>ToggleTerm direction=horizontal<cr>", opts)
 -- ====================
 -- LSP Format
 -- ====================
-keymap("n", "=", "<cmd>lua vim.lsp.buf.format({ async = true })<cr>", opts)
+-- = 用 conform.nvim 格式化：支持有/无 LSP 的文件类型（JSON/YAML/Java/JS/Vue 等）
+-- JSON → jq，Java → google-java-format，JS/Vue → prettier，Java → LSP fallback
+vim.keymap.set({ "n", "v" }, "=", function()
+  require("conform").format({ async = true, lsp_fallback = true })
+end, vim.tbl_extend("force", opts, { desc = "Format (conform)" }))
 
 -- ====================
 -- Insert 模式
