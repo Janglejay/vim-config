@@ -12,7 +12,10 @@ local state = {
   source_win  = -1,   -- 触发 gR 时的代码窗口
 }
 
-local SIDEBAR_WIDTH = 72
+-- 宽度用相对值：右边一半（最小 60，最大 120）
+local function sidebar_width()
+  return math.max(60, math.min(120, math.floor(vim.o.columns * 0.5)))
+end
 local HEADER_SIZE   = 2
 local FOOTER_SIZE   = 2
 
@@ -119,8 +122,9 @@ end
 local function create_windows(source_win)
   vim.api.nvim_set_current_win(source_win)
 
-  -- botright vsplit：右列撑满整个编辑器高度（不受其他分割影响）
-  vim.cmd("botright " .. SIDEBAR_WIDTH .. "vsplit")
+  -- botright vsplit：右侧占屏幕 50%（相对定位，不用固定列数）
+  local w = sidebar_width()
+  vim.cmd("botright " .. w .. "vsplit")
   state.win = vim.api.nvim_get_current_win()
   vim.api.nvim_win_set_buf(state.win, state.buf)
   vim.wo[state.win].winfixwidth    = true
@@ -231,9 +235,9 @@ function M.open()
   -- 填充内容
   local all_lines = {}
   table.insert(all_lines, " Call Hierarchy: " .. root_items[1].name)
-  table.insert(all_lines, string.rep("─", SIDEBAR_WIDTH - 2))
+  table.insert(all_lines, string.rep("─", sidebar_width() - 2))
   for _, l in ipairs(lines) do table.insert(all_lines, l) end
-  table.insert(all_lines, string.rep("─", SIDEBAR_WIDTH - 2))
+  table.insert(all_lines, string.rep("─", sidebar_width() - 2))
   table.insert(all_lines, " <CR>跳转  p/o预览  q关闭  <Leader>↑↓调高度")
 
   local offset_entries = {}
