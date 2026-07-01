@@ -116,8 +116,11 @@ return {
             vim.notify("jdtls: 清理 workspace，重建索引...", vim.log.levels.WARN)
             for _, c in ipairs(vim.lsp.get_clients({ name = "jdtls" })) do c.stop() end
             vim.fn.delete(workspace, "rf")
+            -- 直接用完整 config 重启，避免 vim.cmd("edit") 后 JAVA_HOME 丢失
+            -- （vim.cmd("edit") 不会重新触发 lazy.nvim 的 config 函数，导致
+            --  nvim-jdtls 用 PATH 里的 jdtls 启动，缺少 cmd_env，报 "requires Java 21"）
             vim.defer_fn(function()
-              vim.cmd("edit")
+              require("jdtls").start_or_attach(config)
               vim.notify("jdtls: 重建中（等状态栏变 ✓）", vim.log.levels.INFO)
             end, 1500)
           end, vim.tbl_extend("force", o, { desc = "jdtls: Full reindex" }))
