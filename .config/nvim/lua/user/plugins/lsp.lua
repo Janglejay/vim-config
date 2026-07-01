@@ -92,7 +92,11 @@ return {
         root_markers = { ".eslintrc", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.json", "eslint.config.js", "eslint.config.ts", "package.json", ".git" },
         settings = { workingDirectory = { mode = "auto" } },
         on_attach = function(client, bufnr)
-          -- eslint 不提供格式化，只做诊断
+          -- 无文件路径的 buffer（unnamed/scratch）跳过，避免 -32603 path undefined 错误
+          if vim.api.nvim_buf_get_name(bufnr) == "" then
+            vim.lsp.buf_detach_client(bufnr, client.id)
+            return
+          end
           client.server_capabilities.documentFormattingProvider = false
           handlers.on_attach(client, bufnr)
         end,
@@ -143,6 +147,38 @@ return {
         capabilities = handlers.capabilities,
       })
       vim.lsp.enable("emmet_ls")
+
+      -- ── Spring Boot Language Server ──────────────────────────────────────
+      -- 安装：bash ~/.config/nvim/scripts/install-spring-boot-ls.sh
+      -- 功能：Bean 导航、@RequestMapping 补全、application.yml 智能提示
+      local sb_jar = vim.fn.expand("~/.local/share/nvim/spring-boot-ls/spring-boot-language-server.jar")
+      if vim.fn.filereadable(sb_jar) == 1 then
+        local java21 = vim.fn.trim(vim.fn.system("/usr/libexec/java_home -v 21 2>/dev/null"))
+        if java21 == "" then java21 = "java" else java21 = java21 .. "/bin/java" end
+
+        vim.lsp.config("spring_boot_ls", {
+          cmd = { java21, "-jar", sb_jar, "--stdio" },
+          filetypes = { "java", "yaml", "properties" },
+          root_markers = { "pom.xml", "build.gradle", "mvnw", "gradlew", ".git" },
+          -- 只处理 Spring Boot 项目（有 pom.xml 或 build.gradle 的目录）
+          settings = {
+            spring_boot = {
+              ls = {
+                checkJDKCompatibility = false,  -- 避免频繁弹出 JDK 不兼容警告
+                java_home = java21:gsub("/bin/java$", ""),
+              }
+            }
+          },
+          on_attach = function(client, bufnr)
+            -- Spring Boot LS 只做补全和导航，不做格式化/高亮
+            client.server_capabilities.documentFormattingProvider = false
+            client.server_capabilities.documentHighlightProvider  = false
+            handlers.on_attach(client, bufnr)
+          end,
+          capabilities = handlers.capabilities,
+        })
+        vim.lsp.enable("spring_boot_ls")
+      end
     end,
   },
   { "hrsh7th/nvim-cmp",
