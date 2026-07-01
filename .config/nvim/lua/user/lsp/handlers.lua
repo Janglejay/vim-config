@@ -78,29 +78,10 @@ local function lsp_keymaps(bufnr)
   --   • 在引用处 → 跳到定义
   --   • 在定义处 → 显示所有引用（含属性/字段引用）
   vim.keymap.set("n", "gd", function()
-    -- 检查是否有支持 definition 的客户端
-    -- 注意：jdtls 的 definitionProvider 可能是 table（非 true），用 ~= nil/false 判断
-    local has_def = false
-    for _, c in ipairs(vim.lsp.get_clients({ bufnr = 0 })) do
-      local dp = c.server_capabilities.definitionProvider
-      if dp ~= nil and dp ~= false then
-        has_def = true; break
-      end
-    end
-    if not has_def then
-      local clients = vim.lsp.get_clients({ bufnr = 0 })
-      if #clients == 0 then
-        vim.notify("jdtls 未连接。打开 .java 文件触发启动，或按 <Leader>jR 重建索引", vim.log.levels.WARN)
-      else
-        -- attach 了但能力未就绪：jdtls 还在从磁盘加载缓存（通常需要 10-30s）
-        -- 状态栏 󰔟 消失、变为 ✓ 后即可使用
-        local names = vim.tbl_map(function(c) return c.name end, clients)
-        vim.notify(
-          "jdtls 正在加载索引缓存（" .. table.concat(names, ", ") .. " 已 attach）\n"
-          .. "等状态栏变为 ✓ jdtls 后重试（通常 10-30 秒）",
-          vim.log.levels.WARN
-        )
-      end
+    -- 移除严格的 definitionProvider 预检查（经常误报"加载中"）
+    -- 改为：有任意 LSP 客户端就尝试调用，Neovim 原生会处理不可用的情况
+    if #vim.lsp.get_clients({ bufnr = 0 }) == 0 then
+      vim.notify("LSP 未连接，打开 .java 文件触发 jdtls 启动", vim.log.levels.WARN)
       return
     end
     local fzf = require("fzf-lua")
