@@ -76,7 +76,7 @@ PROJECTS_DIR="$HOME/Company/JavaProjects"
 JDTLS_CACHE="$HOME/Library/Caches/jdtls"   # jdtls（Mason wrapper）实际的 workspace 目录
 WAIT_PER_PROJECT=0     # 0 = 不限时，等 jdtls 自然完成（推荐，脚本在凌晨/中午跑）
                        # 改为正整数（秒）可设超时，超时后 jdtls 增量缓存仍保留
-MAX_JOBS=2             # 最多同时跑几个 jdtls（内存限制，建议不超过 2）
+MAX_JOBS=4             # 最多同时跑几个 jdtls（内存限制，建议不超过 2）
 FORCE_REBUILD=false
 # 提供 PTY 的方式：tmux（默认）或 script（macOS 内置，不需要额外安装）
 # 改为 script 时设为 false
@@ -101,15 +101,28 @@ notify() {
   } >/dev/null 2>&1 || true
 }
 
-# 原子计数器（用临时文件，支持并行子进程写入）
+# 原子计数器（临时文件，支持并行子进程写入）
 TMPDIR_CNT=$(mktemp -d)
 echo 0 > "$TMPDIR_CNT/total"
 echo 0 > "$TMPDIR_CNT/warmed"
 echo 0 > "$TMPDIR_CNT/skipped"
 echo 0 > "$TMPDIR_CNT/failed"
+TOTAL_PROJECTS=0  # 预计总项目数（main 里赋值后各 subprocess 读取）
 cnt_inc() { echo $(( $(cat "$TMPDIR_CNT/$1") + 1 )) > "$TMPDIR_CNT/$1"; }
 cnt_get() { cat "$TMPDIR_CNT/$1"; }
-# 注意：cleanup 和 trap 已在脚本顶部定义，此处不重复注册
+
+# ASCII 进度条：draw_bar <done> <total> [width=25]
+draw_bar() {
+  local done=$1 total=$2 width=${3:-25}
+  [ "$total" -le 0 ] && echo "[░░░░░░░░░░░░░░░░░░░░░░░░░] 0/?" && return
+  local filled=$(( done * width / total ))
+  local empty=$(( width - filled ))
+  local bar=""
+  [ "$filled" -gt 0 ] && bar="${bar}$(printf '█%.0s' $(seq 1 $filled))"
+  [ "$empty"  -gt 0 ] && bar="${bar}$(printf '░%.0s' $(seq 1 $empty))"
+  local pct=$(( done * 100 / total ))
+  printf "[%s] %d/%d (%d%%)" "$bar" "$done" "$total" "$pct"
+}
 
 # ──────────────────────────────────────────────────────────────
 # 单项目处理函数（在后台子进程中运行）
@@ -163,7 +176,11 @@ process_project() {
         tmux kill-session -t "$session_name" 2>/dev/null || true
         break
       fi
-      [ $((elapsed % 60)) -eq 0 ] && echo "    [$project_name] ${elapsed}s ..."
+      if [ $((elapsed % 30)) -eq 0 ]; then
+        local done=$(( $(cnt_get warmed) + $(cnt_get skipped) ))
+        local bar; bar=$(draw_bar "$done" "$TOTAL_PROJECTS")
+        printf "  %s  ⏱  %s %ds\n" "$bar" "$project_name" "$elapsed"
+      fi
     done
 
   else
@@ -181,7 +198,11 @@ process_project() {
     local elapsed=0
     while kill -0 "$nvim_pid" 2>/dev/null; do
       sleep 10; elapsed=$((elapsed + 10))
-      [ $((elapsed % 60)) -eq 0 ] && echo "    [$project_name] ${elapsed}s ..."
+      if [ $((elapsed % 30)) -eq 0 ]; then
+        local done=$(( $(cnt_get warmed) + $(cnt_get skipped) ))
+        local bar; bar=$(draw_bar "$done" "$TOTAL_PROJECTS")
+        printf "  %s  ⏱  %s %ds\n" "$bar" "$project_name" "$elapsed"
+      fi
     done
     wait "$nvim_pid" 2>/dev/null || true
   fi
@@ -211,7 +232,14 @@ echo "  jdtls 预热脚本 — 并行 ${MAX_JOBS} 个项目  [PTY: $PTY_MODE]"
 echo "  目录: $PROJECTS_DIR  |  开始: ${START_TIME}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-notify "jdtls 索引构建开始 🔨" "并行预热 JavaProjects (${MAX_JOBS} 并发，${START_TIME})"
+# 预统计 Java 项目总数（供进度条使用）
+for _d in "$PROJECTS_DIR"/*/; do
+  { [ -f "$_d/pom.xml" ] || [ -f "$_d/build.gradle" ]; } && \
+    TOTAL_PROJECTS=$((TOTAL_PROJECTS + 1))
+done
+echo "  共检测到 ${TOTAL_PROJECTS} 个 Java 项目"
+
+notify "jdtls 索引构建开始 🔨" "并行预热 ${TOTAL_PROJECTS} 个项目（${MAX_JOBS} 并发，${START_TIME}）"
 
 pids=()   # 后台子进程 PID 列表
 
