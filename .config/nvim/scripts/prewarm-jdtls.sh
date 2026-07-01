@@ -74,8 +74,8 @@ trap on_interrupt INT TERM
 
 PROJECTS_DIR="$HOME/Company/JavaProjects"
 JDTLS_CACHE="$HOME/Library/Caches/jdtls"   # jdtls（Mason wrapper）实际的 workspace 目录
-WAIT_PER_PROJECT=0     # 0 = 不限时，等 jdtls 自然完成（推荐，脚本在凌晨/中午跑）
-                       # 改为正整数（秒）可设超时，超时后 jdtls 增量缓存仍保留
+WAIT_PER_PROJECT=1200  # 每个项目最多等 20 分钟（大型项目首次索引约需 10-15 分钟）
+                       # 超时不等于失败：jdtls 增量缓存保留，下次继续
 MAX_JOBS=4             # 最多同时跑几个 jdtls（内存限制，建议不超过 2）
 FORCE_REBUILD=false
 # 提供 PTY 的方式：tmux（默认）或 script（macOS 内置，不需要额外安装）
@@ -112,14 +112,15 @@ cnt_inc() { echo $(( $(cat "$TMPDIR_CNT/$1") + 1 )) > "$TMPDIR_CNT/$1"; }
 cnt_get() { cat "$TMPDIR_CNT/$1"; }
 
 # ASCII 进度条：draw_bar <done> <total> [width=25]
+# 用 # 和 . 替代 Unicode 方块字符，所有终端均可渲染
 draw_bar() {
   local done=$1 total=$2 width=${3:-25}
-  [ "$total" -le 0 ] && echo "[░░░░░░░░░░░░░░░░░░░░░░░░░] 0/?" && return
+  [ "$total" -le 0 ] && printf "[%s] 0/?" "$(printf '.%.0s' $(seq 1 $width))" && return
   local filled=$(( done * width / total ))
   local empty=$(( width - filled ))
   local bar=""
-  [ "$filled" -gt 0 ] && bar="${bar}$(printf '█%.0s' $(seq 1 $filled))"
-  [ "$empty"  -gt 0 ] && bar="${bar}$(printf '░%.0s' $(seq 1 $empty))"
+  [ "$filled" -gt 0 ] && bar="${bar}$(printf '#%.0s' $(seq 1 $filled))"
+  [ "$empty"  -gt 0 ] && bar="${bar}$(printf '.%.0s' $(seq 1 $empty))"
   local pct=$(( done * 100 / total ))
   printf "[%s] %d/%d (%d%%)" "$bar" "$done" "$total" "$pct"
 }
@@ -148,17 +149,16 @@ process_project() {
 
   local ws_before; ws_before=$(ls "$JDTLS_CACHE" 2>/dev/null | wc -l | tr -d ' ')
 
-  # nvim 自动退出命令：有超时则用 defer_fn 定时 qa!，无超时则不注入（jdtls 完成后手动退出）
-  # 注：jdtls 完成索引后不会自动关闭 nvim，无超时模式下 nvim 会一直等
-  # 解决方案：用 LspProgress "end" 事件检测索引完成，自动退出
-  local auto_quit_lua=""
-  if [ "${WAIT_PER_PROJECT:-0}" -gt 0 ]; then
-    auto_quit_lua="-c 'lua vim.defer_fn(function() vim.cmd(\"qa!\") end, $((WAIT_PER_PROJECT * 1000)))'"
-  else
-    # 无限等待模式：监听 jdtls 索引完成事件，完成后自动退出
-    auto_quit_lua="-c 'lua vim.api.nvim_create_autocmd(\"LspProgress\", { callback = function(ev) local v = (ev.data.params or {}).value or {}; if v.kind == \"end\" then vim.defer_fn(function() vim.cmd(\"qa!\") end, 3000) end end })'"
-  fi
-  local nvim_cmd="cd '$project_dir' && nvim $auto_quit_lua '$java_file'"
+  # 把自动退出 Lua 写入临时文件，避免 shell 字符串中嵌套 Lua 的引号灾难
+  local lua_file="$TMPDIR_CNT/auto_quit_$$.lua"
+  local timeout_ms=$(( WAIT_PER_PROJECT * 1000 ))
+  cat > "$lua_file" << LUAEOF
+-- 超时自动退出（${WAIT_PER_PROJECT}s 后 qa!）
+vim.defer_fn(function()
+  pcall(vim.cmd, "qa!")
+end, ${timeout_ms})
+LUAEOF
+  local nvim_cmd="cd '$project_dir' && nvim -S '$lua_file' '$java_file'"
   local nvim_pid=""
 
   if [ "${USE_TMUX:-true}" = true ] && command -v tmux &>/dev/null; then
