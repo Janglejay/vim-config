@@ -16,8 +16,12 @@ local state = {
 local function sidebar_width()
   return math.max(60, math.min(120, math.floor(vim.o.columns * 0.5)))
 end
-local HEADER_SIZE   = 2
-local FOOTER_SIZE   = 2
+local HEADER_SIZE = 2
+local FOOTER_SIZE = 2
+-- 最大递归深度（visited 集合防止循环调用，此限制纯粹为了性能）
+-- 每增加一层请求数量指数增长，默认 6 层对大型项目通常够用
+-- 如需更深：require("user.call_hierarchy").set_max_depth(10)
+local MAX_DEPTH = 6
 
 -- ──────────────────────────────────────────────
 -- 构建带树形连线的文本行
@@ -34,7 +38,7 @@ local function build_tree(root)
   table.insert(entries, { file = root_file, lnum = root_lnum })
 
   local function add_callers(item, prefix, depth)
-    if depth > 4 then return end
+    if depth > MAX_DEPTH then return end
     local key = item.uri .. ":" .. tostring(item.range.start.line)
     if visited[key] then return end
     visited[key] = true
@@ -303,6 +307,13 @@ function M.reopen()
       break
     end
   end
+end
+
+-- 动态调整最大递归深度（visited 防循环，此值只影响性能/结果量）
+-- 用法：:lua require("user.call_hierarchy").set_max_depth(10)
+function M.set_max_depth(n)
+  MAX_DEPTH = math.max(1, n)
+  vim.notify("gR 最大深度已设为 " .. MAX_DEPTH .. " 层", vim.log.levels.INFO)
 end
 
 return M
