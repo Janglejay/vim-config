@@ -37,10 +37,11 @@ local options = {
   scrolloff = 8, -- is one of my fav
   sidescrolloff = 8,
   guifont = "monospace:h17", -- the font used in graphical neovim applications
-  foldmethod = "expr",
-  foldexpr = "nvim_treesitter#foldexpr()",
-  foldenable = false,
-  foldlevel = 99
+  foldmethod  = "expr",
+  foldexpr    = "v:lua.vim.treesitter.foldexpr()",  -- Neovim 0.10+ 原生 treesitter fold
+  foldenable  = true,   -- 启用折叠（zz/zZ 才能生效）
+  foldlevel   = 99,     -- 默认全展开（需要时手动折叠）
+  foldlevelstart = 99   -- 打开文件时全展开
 }
 
 vim.opt.shortmess:append "c"
