@@ -11,6 +11,7 @@ local options = {
   pumheight = 10, -- pop up menu height
   showmode = false, -- we don't need to see things like -- INSERT -- anymore
   showtabline = 2, -- always show tabs
+  laststatus  = 3, -- 全局状态栏（始终可见，Neovim 0.7+）
   smartcase = true, -- smart case
   smartindent = true, -- make indenting smarter again
   splitbelow = true, -- force all horizontal splits to go below current window
