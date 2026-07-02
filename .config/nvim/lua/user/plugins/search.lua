@@ -42,15 +42,28 @@ return {
 
         if sym_client then
           -- jdtls 就绪：一次性拉取所有符号，过滤 jdt:// 和 .m2（只显示项目源码）
-          -- jdt:// = JAR 包里的类（Maven 依赖），file:// = 项目自身的源文件
-          local ok, result = sym_client.request_sync(
-            "workspace/symbol", { query = "" }, 8000, 0)
-
-          if not ok or not result or not result.result or #result.result == 0 then
-            -- jdtls 还在初始化，静默退化为文件搜索（不显示烦人通知）
-            fzf.files()
-            return
+          -- 使用 vim.lsp.buf_request_sync（client.request_sync 在 Neovim 0.12 废弃）
+          local bufnr = vim.api.nvim_get_current_buf()
+          local was_attached = vim.lsp.buf_is_attached(bufnr, sym_client.id)
+          if not was_attached then
+            pcall(vim.lsp.buf_attach_client, bufnr, sym_client.id)
           end
+
+          local raw = vim.lsp.buf_request_sync(bufnr, "workspace/symbol", { query = "" }, 8000)
+
+          if not was_attached then
+            pcall(vim.lsp.buf_detach_client, bufnr, sym_client.id)
+          end
+
+          -- buf_request_sync 返回 { [client_id] = { result = {...} } }
+          local all_symbols = {}
+          if raw then
+            for _, res in pairs(raw) do
+              if res.result then vim.list_extend(all_symbols, res.result) end
+            end
+          end
+
+          if #all_symbols == 0 then fzf.files(); return end
 
           local entries, entry_map = {}, {}
           local icons = {
@@ -60,7 +73,7 @@ return {
           }
           local m2 = vim.fn.expand("~") .. "/.m2/"
 
-          for _, sym in ipairs(result.result) do
+          for _, sym in ipairs(all_symbols) do
             local uri = (sym.location or {}).uri or ""
             -- 跳过 jdt://（JAR 包内的类）和 .m2（Maven 本地仓库）
             if not uri:match("^jdt://") and not uri:find(m2, 1, true) then
