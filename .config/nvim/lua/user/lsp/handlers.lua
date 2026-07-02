@@ -141,4 +141,10 @@ M.capabilities = ok
   and cmp_lsp.default_capabilities()
   or  vim.lsp.protocol.make_client_capabilities()
 
+-- 禁用 willSaveWaitUntil：阻止 jdtls 等 LSP 在保存前注入格式化 edits
+local sync = M.capabilities.textDocument and M.capabilities.textDocument.synchronization
+if sync then
+  sync.willSaveWaitUntil = false
+end
+
 return M

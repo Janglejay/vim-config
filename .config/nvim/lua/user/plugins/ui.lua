@@ -1,3 +1,5 @@
+-- UI 相关插件
+
 return {
   -- Icons（被多个插件依赖）
   {
@@ -38,10 +40,10 @@ return {
     end,
   },
 
-  -- 终端（用 cmd 触发懒加载，保留 keymaps.lua 里 st 的原始映射）
+  -- 终端
   {
     "akinsho/toggleterm.nvim",
-    cmd = { "ToggleTerm", "TermExec", "ToggleTermToggleAll" },
+    cmd  = { "ToggleTerm", "TermExec", "ToggleTermToggleAll" },
     config = function()
       require "user.toggleterm"
     end,
@@ -65,14 +67,30 @@ return {
     end,
   },
 
-  -- Colorschemes
+  -- ==================== 配色方案 ====================
+  -- Catppuccin - 柔和奶油风
   {
-    "morhetz/gruvbox",
+    "catppuccin/nvim",
+    name = "catppuccin",
     lazy = false,
     priority = 1000,
-    config = function()
-      require "user.colorscheme"
-    end,
+  },
+  -- Tokyo Night - 高对比度现代风
+  {
+    "folke/tokyonight.nvim",
+    lazy = false,
+    priority = 1000,
+  },
+  -- Nightfox - 温暖舒适风
+  {
+    "EdenEast/nightfox.nvim",
+    lazy = false,
+    priority = 1000,
+  },
+  -- 旧配色，改为懒加载
+  {
+    "morhetz/gruvbox",
+    lazy = true,
   },
   {
     "lunarvim/darkplus.nvim",
@@ -81,6 +99,15 @@ return {
   {
     "tanvirtin/monokai.nvim",
     lazy = true,
+  },
+  -- 配色管理器（最后加载，应用选中的配色）
+  {
+    dir = vim.fn.stdpath("config") .. "/lua/user/colorschemes",
+    lazy = false,
+    priority = 999,
+    config = function()
+      require("user.colorschemes").apply()
+    end,
   },
 
   -- Git 状态标记

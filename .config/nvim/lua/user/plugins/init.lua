@@ -4,6 +4,7 @@ local specs = {}
 local modules = {
   "user.plugins.ui",
   "user.plugins.lsp",
+  "user.plugins.git",
   "user.plugins.java",
   "user.plugins.search",
   "user.plugins.dap",

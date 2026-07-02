@@ -101,8 +101,11 @@ keymap("n", "gp", "<cmd>lua require 'gitsigns'.preview_hunk()<cr>", opts)
 keymap("n", "<C-f>", "<cmd>lua require 'gitsigns'.prev_hunk()<cr>", opts)
 keymap("n", "<C-d>", "<cmd>lua require 'gitsigns'.next_hunk()<cr>", opts)
 
--- lazygit：完整 git TUI（浮窗）
-keymap("n", "<Leader>gl", "<cmd>lua _LAZYGIT_TOGGLE()<cr>", opts)
+-- Fork：在 Fork GUI 中打开当前项目
+vim.keymap.set("n", "<Leader>gf", function()
+  local path = vim.fn.expand("%:p:h")
+  vim.fn.jobstart({ "open", "-a", "Fork", path })
+end, { noremap = true, silent = true, desc = "在 Fork 中打开" })
 
 -- ====================
 -- 跳转历史

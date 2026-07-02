@@ -190,7 +190,7 @@ return {
     },
     config = function() require "user.cmp" end,
   },
-  { "stevearc/conform.nvim", event = { "BufWritePre" }, config = function() require "user.lsp.conform" end },
+  { "stevearc/conform.nvim", event = { "VeryLazy" }, config = function() require "user.lsp.conform" end },
   { "ray-x/lsp_signature.nvim", event = "LspAttach", opts = { bind = true, border = "rounded" } },
   { "tamago324/nlsp-settings.nvim", lazy = true },
 }

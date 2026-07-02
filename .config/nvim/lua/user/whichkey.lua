@@ -51,14 +51,18 @@ which_key.add({
 
   -- Git
   { "<leader>g",  group = "Git" },
-  { "<leader>gl", "<cmd>lua require 'gitsigns'.blame_line()<cr>",       desc = "Blame" },
+  { "<leader>gl", "<cmd>lua require 'gitsigns'.blame_line()<cr>",  desc = "Blame 当前行" },
+  { "<leader>gL", "<cmd>lua require 'gitsigns'.blame()<cr>",      desc = "Blame 全文件（每行作者）" },
+  { "<leader>gd", desc = "Diffview（所有改动）" },
+  { "<leader>gh", desc = "当前文件 commit 历史" },
+  { "<leader>gH", desc = "全项目 commit 历史" },
+  { "<leader>gc", desc = "关闭 Diffview" },
   { "<leader>gR", "<cmd>lua require 'gitsigns'.reset_buffer()<cr>",     desc = "Reset Buffer" },
   { "<leader>gs", "<cmd>lua require 'gitsigns'.stage_hunk()<cr>",       desc = "Stage Hunk" },
   { "<leader>gu", "<cmd>lua require 'gitsigns'.undo_stage_hunk()<cr>",  desc = "Undo Stage Hunk" },
   { "<leader>go", "<cmd>lua require('fzf-lua').git_status()<cr>",       desc = "Git Status" },
   { "<leader>gb", "<cmd>lua require('fzf-lua').git_branches()<cr>",     desc = "Git Branches" },
-  { "<leader>gc", "<cmd>lua require('fzf-lua').git_commits()<cr>",      desc = "Git Commits" },
-  { "<leader>gd", "<cmd>Gitsigns diffthis HEAD<cr>",                    desc = "Diff HEAD" },
+  { "<leader>gf", desc = "在 Fork 中打开" },
 
   -- LSP
   { "<leader>l",  group = "LSP" },

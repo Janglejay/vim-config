@@ -40,38 +40,24 @@ end
 vim.cmd('autocmd! TermOpen term://* lua set_terminal_keymaps()')
 
 local Terminal = require("toggleterm.terminal").Terminal
--- local lazygit = Terminal:new({ cmd = "lazygit", hidden = true })
---
--- function _LAZYGIT_TOGGLE()
--- 	lazygit:toggle()
--- end
---
--- local node = Terminal:new({ cmd = "node", hidden = true })
---
--- function _NODE_TOGGLE()
--- 	node:toggle()
--- end
---
--- local ncdu = Terminal:new({ cmd = "ncdu", hidden = true })
---
--- function _NCDU_TOGGLE()
--- 	ncdu:toggle()
--- end
---
--- local htop = Terminal:new({ cmd = "htop", hidden = true })
---
--- function _HTOP_TOGGLE()
--- 	htop:toggle()
--- end
---
--- local python = Terminal:new({ cmd = "python", hidden = true })
---
--- function _PYTHON_TOGGLE()
--- 	python:toggle()
--- end
 
--- local rust = Terminal:new({ cmd = "cargo run", dir = ".", hidden = false })
+local lazygit = Terminal:new({
+  cmd       = "lazygit",
+  hidden    = true,
+  direction = "float",
+  float_opts = {
+    border   = "curved",
+    width    = math.floor(vim.o.columns * 0.95),
+    height   = math.floor(vim.o.lines * 0.92),
+    winblend = 0,
+  },
+  on_open = function(term)
+    -- lazygit 内 q/esc 直接关闭，不需要经过 nvim 的 terminal 转义
+    vim.api.nvim_buf_set_keymap(term.bufnr, "t", "q", "<cmd>close<CR>",
+      { noremap = true, silent = true })
+  end,
+})
 
--- function _RUST_TOGGLE()
-  -- rust:toggle()
--- end
+function _LAZYGIT_TOGGLE()
+  lazygit:toggle()
+end

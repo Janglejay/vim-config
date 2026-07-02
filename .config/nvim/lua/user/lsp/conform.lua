@@ -28,10 +28,6 @@ conform.setup({
     scss            = { "prettier" },
     html            = { "prettier" },
   },
-  format_on_save = {
-    timeout_ms = 5000,
-    lsp_fallback = true,
-  },
 })
 
 -- 格式化已由 keymaps.lua 中的 = 绑定处理，此处不重复绑定

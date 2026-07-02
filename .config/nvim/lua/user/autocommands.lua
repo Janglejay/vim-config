@@ -36,6 +36,10 @@ vim.cmd [[
 --   autocmd BufWritePre * lua vim.lsp.buf.formatting()
 -- augroup end
 
+-- 禁止 LSP 通过 willSaveWaitUntil 在保存时注入格式化 edits
+-- jdtls 等服务器会响应此请求并返回格式化变更，这是自动格式化的根源
+vim.lsp.handlers["textDocument/willSaveWaitUntil"] = function() end
+
 -- 打开目录时自动启动 nvim-tree（netrw 已被禁用，由 nvim-tree 接管）
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function(data)
