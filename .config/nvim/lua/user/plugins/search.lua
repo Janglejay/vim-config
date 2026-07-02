@@ -117,12 +117,13 @@ return {
           local root = vim.fs.root(0, { "pom.xml", "build.gradle", ".git" }) or vim.fn.getcwd()
           -- rg 搜索 Java 类/接口/枚举/方法声明行
           -- 模式匹配：class Foo | interface Bar | enum Baz | public/private void method(
+          -- 用独立变量避免 Lua [[]] 长字符串里的 ]] 歧义问题
+          local pat_type   = "-e '(class|interface|enum|@interface)\\s+\\w+'"
+          local pat_method = "-e '\\s+(public|protected|private)\\s+\\S+\\s+\\w+\\s*\\('"
           local rg_cmd = string.format(
-            "rg --type java -n --no-heading --color never "
-            .. [[-e '^\s*(public|protected|private)?\s*(static\s+)?(final\s+)?(class|interface|enum|@interface)\s+\w+' ]]
-            .. [[-e '^\s+(public|protected|private)\s+(static\s+)?(final\s+)?[\w<>\[\]]+\s+\w+\s*\(' ]]
-            .. "--glob '!*/target/*' --glob '!*/.git/*' %s",
-            vim.fn.shellescape(root)
+            "rg -tjava -n --no-heading --color never %s %s"
+            .. " --glob '!*/target/*' --glob '!*/.git/*' %s",
+            pat_type, pat_method, vim.fn.shellescape(root)
           )
 
           local entries, entry_map = {}, {}
