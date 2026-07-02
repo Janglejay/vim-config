@@ -149,7 +149,7 @@ step_install_homebrew() {
 step_install_cli_tools() {
     log_step "安装命令行工具..."
 
-    local tools=("git" "nvim" "tmux" "starship" "zap" "ripgrep" "fd" "fzf" "lazygit" "yazi" "zoxide")
+    local tools=("git" "nvim" "tmux" "starship" "zap" "ripgrep" "fd" "fzf" "lazygit" "yazi" "zoxide" "jq" "node")
 
     for tool in "${tools[@]}"; do
         if check_command "$tool"; then
@@ -182,7 +182,7 @@ step_install_cli_tools() {
 step_install_gui_apps() {
     log_step "安装 GUI 应用程序..."
 
-    local apps=("ghostty" "karabiner-elements" "raycast")
+    local apps=("ghostty" "karabiner-elements" "raycast" "zulu@21")
 
     for app in "${apps[@]}"; do
         local app_name=$(echo "$app" | sed 's/-/ /g' | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)} 1')
@@ -333,25 +333,38 @@ EOF
 }
 
 # =============================================================================
-# Step 8: 安装 Neovim 插件
+# Step 8: 安装 Neovim 插件（lazy.nvim）
 # =============================================================================
 step_install_nvim_plugins() {
-    log_step "安装 Neovim 插件..."
+    log_step "安装 Neovim 插件（lazy.nvim）..."
 
-    # 安装 Packer
-    local packer_dir="$HOME/.local/share/nvim/site/pack/packer/start/packer.nvim"
-    if [[ ! -d "$packer_dir" ]]; then
-        log_info "安装 Packer.nvim..."
-        git clone --depth 1 https://github.com/wbthomason/packer.nvim "$packer_dir"
+    # 引导安装 lazy.nvim（插件管理器本体）
+    local lazy_dir="$HOME/.local/share/nvim/lazy/lazy.nvim"
+    if [[ ! -d "$lazy_dir" ]]; then
+        log_info "安装 lazy.nvim..."
+        git clone --filter=blob:none --branch=stable \
+            https://github.com/folke/lazy.nvim.git "$lazy_dir"
+        log_success "lazy.nvim 安装完成"
+    else
+        log_success "lazy.nvim 已存在"
     fi
 
-    # 安装插件
-    log_info "运行 PackerSync (首次安装可能需要几分钟)..."
-    if timeout 300 nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync' 2>&1; then
+    # 同步所有插件（headless 模式）
+    log_info "运行 lazy sync（首次安装可能需要几分钟）..."
+    if timeout 300 nvim --headless "+Lazy! sync" +qa 2>&1; then
         log_success "Neovim 插件安装完成"
     else
-        log_warn "插件安装超时或失败，首次启动 nvim 时会继续安装"
+        local exit_code=$?
+        if [[ $exit_code -eq 124 ]]; then
+            log_warn "插件安装超时（5分钟），首次启动 nvim 时会继续完成"
+        else
+            log_warn "插件安装可能有错误（退出码: $exit_code），首次启动 nvim 时会继续"
+        fi
     fi
+
+    # Mason 工具安装（LSP、格式化器等）
+    log_info "安装 Mason 工具（jdtls、google-java-format 等）..."
+    log_info "提示：首次启动 nvim 后运行 :MasonUpdate 安装所有工具"
 }
 
 # =============================================================================

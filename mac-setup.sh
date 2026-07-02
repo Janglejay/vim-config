@@ -453,11 +453,21 @@ setup_nvim() {
     fi
 
     # 3. 安装依赖工具（使用重试）
-    log_info "[Neovim] 安装依赖工具 (ripgrep, fd, lazygit, node, python)..."
-    if brew_install_with_retry "brew install" "ripgrep fd lazygit node python"; then
+    log_info "[Neovim] 安装依赖工具 (ripgrep, fd, fzf, lazygit, node, jq, python)..."
+    if brew_install_with_retry "brew install" "ripgrep fd fzf lazygit node jq python"; then
         log_success "[Neovim] 依赖工具安装完成"
     else
         log_warn "[Neovim] 部分依赖工具安装失败"
+    fi
+
+    # Java 21（jdtls 运行时必须）
+    log_info "[Neovim] 安装 Java 21 (jdtls 依赖)..."
+    if [[ -d "/Library/Java/JavaVirtualMachines/zulu-21.jdk" ]]; then
+        log_success "[Neovim] Java 21 已安装，跳过"
+    elif brew_install_with_retry "brew install --cask" "zulu@21"; then
+        log_success "[Neovim] Java 21 安装完成"
+    else
+        log_warn "[Neovim] Java 21 安装失败，jdtls 将无法启动"
     fi
 
     # 4. 安装 pynvim（检查 pip3 是否存在）
@@ -503,38 +513,35 @@ setup_nvim() {
         fi
     fi
 
-    # 8. 安装/更新 Packer.nvim 插件管理器
-    log_info "[Neovim] 安装/更新 Packer.nvim 插件管理器..."
-    local packer_dir="$HOME/.local/share/nvim/site/pack/packer/start/packer.nvim"
-    if [[ -d "$packer_dir" ]]; then
-        log_info "[Neovim] Packer.nvim 已存在，更新中..."
-        (cd "$packer_dir" && git pull) || log_warn "[Neovim] Packer.nvim 更新失败，继续使用现有版本"
+    # 8. 安装 lazy.nvim 插件管理器
+    log_info "[Neovim] 安装 lazy.nvim 插件管理器..."
+    local lazy_dir="$HOME/.local/share/nvim/lazy/lazy.nvim"
+    if [[ -d "$lazy_dir" ]]; then
+        log_info "[Neovim] lazy.nvim 已存在，更新中..."
+        (cd "$lazy_dir" && git pull) || log_warn "[Neovim] lazy.nvim 更新失败，继续使用现有版本"
     else
-        if git clone --depth 1 https://github.com/wbthomason/packer.nvim "$packer_dir"; then
-            log_success "[Neovim] Packer.nvim 安装完成"
+        if git clone --filter=blob:none --branch=stable \
+                https://github.com/folke/lazy.nvim.git "$lazy_dir"; then
+            log_success "[Neovim] lazy.nvim 安装完成"
         else
-            log_error "[Neovim] Packer.nvim 安装失败"
+            log_error "[Neovim] lazy.nvim 安装失败"
         fi
     fi
 
-    # 9. 安装/刷新所有插件（headless 模式）
-    log_info "[Neovim] 正在安装/同步所有插件（可能需要几分钟）..."
-    log_info "[Neovim] 插件清单: lua/user/plugins.lua"
-
-    # 使用 headless 模式运行 PackerSync，完成后自动退出
-    # 设置超时时间为 300 秒（5分钟），防止卡住
-    log_info "[Neovim] 运行 PackerSync 中，请耐心等待..."
-    if timeout 300 nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync' 2>&1; then
+    # 9. 安装/同步所有插件（headless 模式）
+    log_info "[Neovim] 正在同步所有插件（可能需要几分钟）..."
+    log_info "[Neovim] 运行 lazy sync 中，请耐心等待..."
+    if timeout 300 nvim --headless "+Lazy! sync" +qa 2>&1; then
         log_success "[Neovim] 所有插件安装/同步完成"
     else
         local exit_code=$?
         if [[ $exit_code -eq 124 ]]; then
-            log_warn "[Neovim] 插件安装超时（5分钟），但可能已部分完成"
+            log_warn "[Neovim] 插件安装超时（5分钟），首次启动 nvim 时会继续"
         else
-            log_warn "[Neovim] 插件安装过程可能有错误（退出码: $exit_code）"
+            log_warn "[Neovim] 插件安装可能有错误（退出码: $exit_code），首次启动会继续"
         fi
-        log_info "[Neovim] 首次启动 nvim 时会继续安装剩余插件"
     fi
+    log_info "[Neovim] 提示：首次启动后运行 :MasonUpdate 安装 jdtls 等 LSP 工具"
 
     log_success "[Neovim] 配置完成"
     log_info "[Neovim] 提示: 首次启动后建议运行 :checkhealth 检查状态"
