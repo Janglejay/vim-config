@@ -111,9 +111,70 @@ return {
             },
           })
         else
-          -- jdtls 未就绪：尝试在后台触发启动，同时展示文件搜索
+          -- jdtls 未就绪：用 ripgrep 直接搜索 Java 类/方法定义（秒级响应，无需 LSP）
           if _G.start_jdtls_for_project then _G.start_jdtls_for_project() end
-          fzf.files({ winopts = { title = " Files (等 ✓ jdtls 后可搜符号) " } })
+
+          local root = vim.fs.root(0, { "pom.xml", "build.gradle", ".git" }) or vim.fn.getcwd()
+          -- rg 搜索 Java 类/接口/枚举/方法声明行
+          -- 模式匹配：class Foo | interface Bar | enum Baz | public/private void method(
+          local rg_cmd = string.format(
+            "rg --type java -n --no-heading --color never "
+            .. [[-e '^\s*(public|protected|private)?\s*(static\s+)?(final\s+)?(class|interface|enum|@interface)\s+\w+' ]]
+            .. [[-e '^\s+(public|protected|private)\s+(static\s+)?(final\s+)?[\w<>\[\]]+\s+\w+\s*\(' ]]
+            .. "--glob '!*/target/*' --glob '!*/.git/*' %s",
+            vim.fn.shellescape(root)
+          )
+
+          local entries, entry_map = {}, {}
+          local handle = io.popen(rg_cmd .. " 2>/dev/null")
+          if handle then
+            for line in handle:lines() do
+              local file, lnum, content = line:match("^(.+):(%d+):(.*)")
+              if file and lnum and content then
+                local fname = vim.fn.fnamemodify(file, ":~:.")
+                -- 提取符号名（class/interface/method 名）
+                local sym = content:match("[Cc]lass%s+(%w+)")
+                  or content:match("[Ii]nterface%s+(%w+)")
+                  or content:match("[Ee]num%s+(%w+)")
+                  or content:match("(@interface%s+)(%w+)")
+                  or content:match("%s(%w+)%s*%(")
+                  or "?"
+                local kind = content:match("class") and "Class"
+                  or content:match("interface") and "Interface"
+                  or content:match("enum") and "Enum"
+                  or "Method"
+                local disp = string.format("%-40s %-9s %s:%s", sym, kind, fname, lnum)
+                table.insert(entries, disp)
+                entry_map[disp] = { file = file, lnum = tonumber(lnum) }
+              end
+            end
+            handle:close()
+          end
+
+          if #entries > 0 then
+            fzf.fzf_exec(entries, {
+              prompt  = "SearchEverywhere (rg)❯ ",
+              winopts = {
+                title   = string.format(" rg 模式 %d 个符号（jdtls 未就绪时的备用）", #entries),
+                height  = 0.85, width = 0.92,
+                preview = { layout = "vertical", vertical = "down:45%" },
+              },
+              previewer = "builtin",
+              actions   = {
+                ["default"] = function(sel)
+                  if not sel or not sel[1] then return end
+                  local info = entry_map[sel[1]]
+                  if info then
+                    vim.cmd("edit " .. vim.fn.fnameescape(info.file))
+                    pcall(vim.api.nvim_win_set_cursor, 0, { info.lnum, 0 })
+                    vim.cmd("normal! zz")
+                  end
+                end,
+              },
+            })
+          else
+            fzf.files({ winopts = { title = " Files (等 ✓ jdtls 后可搜符号) " } })
+          end
         end
       end, vim.tbl_extend("force", opts, { desc = "SearchEverywhere" }))
 

@@ -30,9 +30,9 @@ return {
       -- Lombok: -javaagent 让注解处理器运行，识别 @Data/@Getter/@Setter
       -- Java 21 已废弃 -Xbootclasspath/a，只需 -javaagent
       local cmd = { jdtls_bin }
-      -- 增加堆内存，防止大型多模块项目 OutOfMemoryError 导致索引损坏
-      table.insert(cmd, "--jvm-arg=-Xmx4g")   -- 最大堆 4GB（默认约 1-2GB）
-      table.insert(cmd, "--jvm-arg=-Xms512m") -- 初始堆，减少频繁扩容
+      -- Mason wrapper 默认 -Xms1G，只需覆盖最大堆
+      -- info-search 等大型多模块项目需要 6GB+，4GB 仍会 OOM
+      table.insert(cmd, "--jvm-arg=-Xmx6g")
       if vim.fn.filereadable(lombok_path) == 1 then
         table.insert(cmd, "--jvm-arg=-javaagent:" .. lombok_path)
       end
@@ -129,8 +129,7 @@ return {
               local j21  = vim.fn.trim(vim.fn.system("/usr/libexec/java_home -v 21 2>/dev/null"))
               if j21 == "" then j21 = "/Library/Java/JavaVirtualMachines/zulu-21.jdk/Contents/Home" end
               local rc = { bin }
-              table.insert(rc, "--jvm-arg=-Xmx4g")
-              table.insert(rc, "--jvm-arg=-Xms512m")
+              table.insert(rc, "--jvm-arg=-Xmx6g")
               if vim.fn.filereadable(lok) == 1 then
                 table.insert(rc, "--jvm-arg=-javaagent:" .. lok)
               end
