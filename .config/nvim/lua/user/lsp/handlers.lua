@@ -56,42 +56,48 @@ local function lsp_keymaps(bufnr)
   --   • 在引用处 → 跳到定义
   --   • 在定义处 → 显示所有引用（支持字段/属性/Lombok 生成的 getter/setter）
   vim.keymap.set("n", "gd", function()
-    -- 无 LSP 客户端时给一次提示，否则直接尝试（让原生 Neovim 处理错误）
-    -- 不再预检 definitionProvider：避免 jdtls 初始化期间反复弹"初始化中"消息
     if #vim.lsp.get_clients({ bufnr = 0 }) == 0 then
-      vim.notify("LSP 未连接", vim.log.levels.WARN)
+      vim.notify("LSP 未连接，请等待 jdtls 就绪", vim.log.levels.WARN)
       return
     end
-    local fzf    = require("fzf-lua")
-    local params = vim.lsp.util.make_position_params()
-    local def_res = vim.lsp.buf_request_sync(0, "textDocument/definition", params, 10000)
+
+    local fzf = require("fzf-lua")
+
+    vim.api.nvim_echo({ { "  gd 查询中...", "Comment" } }, false, {})
+    local params  = vim.lsp.util.make_position_params()
+    local def_res = vim.lsp.buf_request_sync(0, "textDocument/definition", params, 30000)
+    vim.api.nvim_echo({ { "" } }, false, {})
+
+    if def_res == nil then
+      vim.notify("gd: 超时（30s），jdtls 仍在索引，稍后重试", vim.log.levels.WARN)
+      return
+    end
 
     local defs = {}
-    if def_res then
-      for _, res in pairs(def_res) do
-        for _, item in ipairs(type(res.result) == "table" and res.result or {}) do
-          table.insert(defs, item)
-        end
+    for _, res in pairs(def_res) do
+      for _, item in ipairs(type(res.result) == "table" and res.result or {}) do
+        table.insert(defs, item)
       end
     end
 
-    -- 判断是否在定义处（严格匹配行号，不用 abs <= 1 防误判）
+    -- 判断光标是否在定义处（匹配 URI + 行号）
     local cur_uri  = vim.uri_from_bufnr(0)
     local cur_line = vim.api.nvim_win_get_cursor(0)[1] - 1
-    local at_def   = (#defs == 0)  -- 无定义 → 本身就是定义
+    local at_def   = (#defs == 0)
     for _, d in ipairs(defs) do
       local uri  = d.uri or d.targetUri or ""
       local line = (d.range and d.range.start.line)
                 or (d.targetRange and d.targetRange.start.line) or -1
-      if uri == cur_uri and line == cur_line then
-        at_def = true; break
-      end
+      if uri == cur_uri and line == cur_line then at_def = true; break end
     end
 
     if at_def then
-      -- vim.schedule 推迟到下个事件循环，避免 buf_request_sync 后状态不一致导致 fzf-lua crash
-      vim.schedule(function() fzf.lsp_references() end)
+      -- 在定义处 → 直接展示引用列表（让 fzf 自己处理，不做数量预查）
+      vim.schedule(function()
+        fzf.lsp_references({ fzf_opts = { ["--query"] = "!.m2" } })
+      end)
     elseif #defs == 1 then
+      -- 单一定义 → 直接跳转
       local d   = defs[1]
       local uri = d.uri or d.targetUri
       local ln  = ((d.range and d.range.start.line)
@@ -102,7 +108,8 @@ local function lsp_keymaps(bufnr)
       vim.api.nvim_win_set_cursor(0, { ln, col })
       vim.cmd("normal! zz")
     else
-      fzf.lsp_definitions()          -- 多定义 → fzf 选择
+      -- 多个定义 → fzf 列表选择
+      fzf.lsp_definitions()
     end
   end, vim.tbl_extend("force", o, { desc = "gd: smart goto" }))
 
@@ -110,8 +117,7 @@ local function lsp_keymaps(bufnr)
   vim.keymap.set("n", "<c-p>",    vim.lsp.buf.hover,        vim.tbl_extend("force", o, { desc = "Hover" }))
   vim.keymap.set("n", "gi",      "<cmd>lua require('fzf-lua').lsp_implementations()<CR>", o)
   vim.keymap.set("n", "<Leader>R", vim.lsp.buf.rename,      vim.tbl_extend("force", o, { desc = "Rename" }))
-  vim.keymap.set("n", "ga",      vim.lsp.buf.code_action,   vim.tbl_extend("force", o, { desc = "Code Action" }))
-  vim.keymap.set("n", "se",      vim.diagnostic.open_float, vim.tbl_extend("force", o, { desc = "Show Diagnostic" }))
+  vim.keymap.set("n", "ga",      vim.diagnostic.open_float, vim.tbl_extend("force", o, { desc = "Show Diagnostic" }))
   vim.keymap.set("n", "<F2>",    function()
     vim.diagnostic.goto_next({ float = { border = "rounded" } })
   end, vim.tbl_extend("force", o, { desc = "Next Diagnostic" }))
@@ -121,6 +127,9 @@ end
 M.on_attach = function(client, bufnr)
   lsp_keymaps(bufnr)
   lsp_highlight_document(client)
+  -- Neovim 0.10+ 在 LSP attach 时自动设置 buffer-local K→hover，会覆盖全局 K=MethodUp
+  -- 删除该 buffer-local 映射，让 editing.lua 里的全局 K 生效（hover 已绑定到 <c-p>）
+  pcall(vim.keymap.del, "n", "K", { buffer = bufnr })
 
   -- Inlay hints（内联类型/参数名提示，Neovim 0.10+ 原生支持）
   -- 效果：orderService.create(userId: id, quantity: 3) ← 灰色的是提示
@@ -145,6 +154,21 @@ M.capabilities = ok
 local sync = M.capabilities.textDocument and M.capabilities.textDocument.synchronization
 if sync then
   sync.willSaveWaitUntil = false
+end
+
+-- ── 全局 LSP 超时优化（jdtls 索引慢，需要更长的默认超时）────────
+-- 默认 10s 对于大型 Java 项目不够，增加到 60s
+vim.lsp.buf_request_sync_default_timeout = 60000
+
+-- 包装常用请求，使用更长的超时
+local orig_references = vim.lsp.buf.references
+vim.lsp.buf.references = function()
+  return orig_references({ timeout = 60000 })
+end
+
+local orig_document_symbol = vim.lsp.buf.document_symbol
+vim.lsp.buf.document_symbol = function()
+  return orig_document_symbol({ timeout = 30000 })
 end
 
 return M

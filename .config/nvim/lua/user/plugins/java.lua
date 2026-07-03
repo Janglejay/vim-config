@@ -7,6 +7,22 @@ return {
       local lombok_path = mason_path .. "/packages/jdtls/lombok.jar"
       local jdtls_bin   = mason_path .. "/bin/jdtls"
 
+      -- 多路径探测 Java 21（供本文件内所有地方复用）
+      local function find_java21()
+        local p = vim.fn.trim(vim.fn.system("/usr/libexec/java_home -v 21 2>/dev/null"))
+        if p ~= "" and vim.fn.isdirectory(p) == 1 then return p end
+        local brew = vim.fn.trim(vim.fn.system("brew --prefix openjdk@21 2>/dev/null"))
+        if brew ~= "" and vim.fn.isdirectory(brew) == 1 then return brew end
+        local zulu = vim.fn.trim(vim.fn.system(
+          "ls -d /Library/Java/JavaVirtualMachines/zulu-21*.jdk/Contents/Home 2>/dev/null | head -1"
+        ))
+        if zulu ~= "" and vim.fn.isdirectory(zulu) == 1 then return zulu end
+        if vim.fn.isdirectory("/opt/homebrew/opt/openjdk@21") == 1 then
+          return "/opt/homebrew/opt/openjdk@21"
+        end
+        return ""
+      end
+
       -- 向上找最顶层聚合 pom.xml（多模块 Maven 支持）
       -- 只用 pom.xml/build.gradle 作为根标记，.git 可能跨多个子项目导致误判
       local function find_root()
@@ -24,14 +40,16 @@ return {
       local project_root = find_root()
       local project_name = vim.fn.fnamemodify(project_root, ":t")
 
-      local java21 = vim.fn.trim(vim.fn.system("/usr/libexec/java_home -v 21 2>/dev/null"))
-      if java21 == "" then java21 = "/Library/Java/JavaVirtualMachines/zulu-21.jdk/Contents/Home" end
+      local java21 = find_java21()
+      if java21 == "" then
+        vim.notify("[jdtls] 未找到 Java 21，请安装：brew install --cask zulu@21", vim.log.levels.ERROR)
+        return
+      end
 
       -- Lombok: -javaagent 让注解处理器运行，识别 @Data/@Getter/@Setter
       -- Java 21 已废弃 -Xbootclasspath/a，只需 -javaagent
       local cmd = { jdtls_bin }
-      -- Mason wrapper 默认 -Xms1G，只需覆盖最大堆
-      -- info-search 等大型多模块项目需要 6GB+，4GB 仍会 OOM
+      table.insert(cmd, "--jvm-arg=-Xms2g")
       table.insert(cmd, "--jvm-arg=-Xmx6g")
       if vim.fn.filereadable(lombok_path) == 1 then
         table.insert(cmd, "--jvm-arg=-javaagent:" .. lombok_path)
@@ -47,15 +65,19 @@ return {
         cmd_env = { JAVA_HOME = java21 },
         root_dir = project_root,
 
+        flags = {
+          debounce_text_changes = 150,
+          allow_incremental_sync = true,
+        },
+
         settings = {
           java = {
             home          = java21,
-            maven         = { downloadSources = true },   -- eclipse.downloadSources 与此重复，移除
+            maven         = { downloadSources = true },
             configuration = { updateBuildConfiguration = "interactive" },
             references    = { includeDecompiledSources = true },
             format        = { enabled = true },
             signatureHelp = { enabled = true },
-            -- CodeLens 在大项目性能开销明显，建议按需开启
             implementationsCodeLens = { enabled = false },
             referencesCodeLens      = { enabled = false },
             completion = {
@@ -68,6 +90,16 @@ return {
             },
             sources      = { organizeImports = { starThreshold = 9999, staticStarThreshold = 9999 } },
             codeGeneration = { useBlocks = true },
+            import = {
+              exclusions = {
+                "**/node_modules/**",
+                "**/.git/**",
+                "**/build/**",
+                "**/target/**",
+                "**/.gradle/**",
+                "**/.idea/**",
+              },
+            },
           },
         },
 
@@ -126,9 +158,13 @@ return {
               local mp   = vim.fn.stdpath("data") .. "/mason"
               local bin  = mp .. "/bin/jdtls"
               local lok  = mp .. "/packages/jdtls/lombok.jar"
-              local j21  = vim.fn.trim(vim.fn.system("/usr/libexec/java_home -v 21 2>/dev/null"))
-              if j21 == "" then j21 = "/Library/Java/JavaVirtualMachines/zulu-21.jdk/Contents/Home" end
+              local j21 = find_java21()
+              if j21 == "" then
+                vim.notify("[jdtls] 未找到 Java 21，重建失败", vim.log.levels.ERROR)
+                return
+              end
               local rc = { bin }
+              table.insert(rc, "--jvm-arg=-Xms2g")
               table.insert(rc, "--jvm-arg=-Xmx6g")
               if vim.fn.filereadable(lok) == 1 then
                 table.insert(rc, "--jvm-arg=-javaagent:" .. lok)

@@ -19,7 +19,7 @@ return {
         },
         -- jdtls 索引中响应慢，增大 LSP 超时（默认约 5000ms 容易超时）
         lsp = {
-          async_or_timeout = 15000,   -- 15 秒
+          async_or_timeout = 30000,   -- 30 秒（大型项目 jdtls 响应慢）
           jump_to_single_result = true,
         },
       })
@@ -109,8 +109,8 @@ return {
       end, vim.tbl_extend("force", opts, { desc = "FindInPath" }))
 
       -- <Leader>e: RecentFiles
-      vim.keymap.set("n", "<Leader>e", function() fzf.oldfiles() end,
-        vim.tbl_extend("force", opts, { desc = "RecentFiles" }))
+      vim.keymap.set("n", "<Leader>e", function() fzf.oldfiles({ cwd_only = true }) end,
+        vim.tbl_extend("force", opts, { desc = "RecentFiles（当前项目）" }))
 
       -- gr: FindUsages（默认过滤 Maven .m2 依赖，在 fzf 里删掉 "!.m2" 可看全部）
       vim.keymap.set("n", "gr", function()
@@ -260,4 +260,5 @@ return {
       })
     end,
   },
+
 }

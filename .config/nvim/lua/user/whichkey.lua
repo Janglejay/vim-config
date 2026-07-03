@@ -29,7 +29,7 @@ which_key.add({
   -- 基础操作
   { "<leader>a",  "<cmd>Alpha<cr>",                               desc = "Alpha 起始页" },
   { "<leader>b",  "<cmd>lua require('fzf-lua').buffers()<cr>",    desc = "Buffers 列表" },
-  { "<leader>e",  "<cmd>NvimTreeToggle<CR>",                      desc = "文件树 (Explorer)" },
+  { "<leader>e",  desc = "RecentFiles（最近打开文件）" },
   { "<leader>p",  "<cmd>NvimTreeFindFile<CR>",                    desc = "定位当前文件" },
   { "<leader>P",  "<cmd>NvimTreeFindFile<CR>",                    desc = "SelectIn (定位当前文件)" },
   -- <leader>w 由 keymaps.lua 实现（Tab toggle），此处只加描述

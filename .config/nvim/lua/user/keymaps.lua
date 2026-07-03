@@ -83,6 +83,7 @@ keymap("n", "<Leader>n", ":nohlsearch<CR>", opts)  -- 取消高亮
 -- ====================
 keymap("n", "Y", "gg^yG<End>", opts)      -- Y 复制整行
 keymap("n", "<Leader>v", "gg^vG<End>", opts) -- 全选
+keymap("n", "<Leader>x", "^f=2hciw", opts) -- 改赋值左边变量名（来自 ideavimrc）
 keymap("n", "<Leader>d", "\"_d", opts)     -- 删除到黑洞寄存器
 keymap("n", "x", "\"_x", opts)             -- x 删除字符
 keymap("n", "c", "\"_c", opts)             -- c 修改
@@ -224,7 +225,7 @@ vim.keymap.set("n", "<Leader>w", function()
 end, { noremap = true, silent = true, desc = "Hide/Restore all tool windows (IDEA Shift+F12)" })
 keymap("n", "<Leader>c", "<cmd>Bdelete<CR>", opts)         -- CloseContent
 keymap("n", "<Leader>C", "<cmd>%bd|e#|bd#<CR>", opts)     -- CloseAllEditorsButActive
-keymap("n", "gw", "<cmd>NvimTreeFocus<CR>", opts)          -- OpenProjectWindows
+keymap("n", "gw", "<cmd>NvimTreeToggle<CR>", opts)         -- OpenProjectWindows
 keymap("n", "<Leader>P", "<cmd>NvimTreeFindFile<CR>", opts) -- SelectIn（定位当前文件）
 
 -- ====================

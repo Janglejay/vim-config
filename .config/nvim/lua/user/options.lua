@@ -1,5 +1,6 @@
 local options = {
   backup = false, -- creates a backup file
+  autoread = true, -- 外部程序（如 mtcc/Claude Code）修改文件后自动重载
   clipboard = "unnamedplus", -- allows neovim to access the system clipboard
   cmdheight = 2, -- more space in the neovim command line for displaying messages
   completeopt = { "menuone", "noselect" }, -- mostly just for cmp

@@ -36,6 +36,25 @@ vim.cmd [[
 --   autocmd BufWritePre * lua vim.lsp.buf.formatting()
 -- augroup end
 
+-- K=MethodUp 保护：lspsaga/Neovim 在 LspAttach 里（含 vim.schedule）设 buffer-local K→hover
+-- vim.defer_fn(100ms) 明确晚于所有同步+异步 LspAttach 处理，buffer-local 最后设置的赢
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(args)
+    local buf = args.buf
+    vim.defer_fn(function()
+      if not _G._nvim_method_jump then return end
+      vim.keymap.set("n", "K", function() _G._nvim_method_jump("prev") end,
+        { noremap = true, silent = true, buffer = buf, desc = "MethodUp" })
+    end, 100)
+  end,
+})
+
+-- mtcc / Claude Code 集成：外部修改文件后，切回 Neovim 时自动重载 buffer
+-- autoread 只声明意图，checktime 才真正触发检查
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold" }, {
+  command = "silent! checktime",
+})
+
 -- 禁止 LSP 通过 willSaveWaitUntil 在保存时注入格式化 edits
 -- jdtls 等服务器会响应此请求并返回格式化变更，这是自动格式化的根源
 vim.lsp.handlers["textDocument/willSaveWaitUntil"] = function() end
